@@ -1,0 +1,13 @@
+[tools]
+node = "22.22.1"
+yarn = "3.8.7"
+"npm:nx" = "v21.7.0"
+just = "1.34.0"
+
+[env]
+NODE_ENV = "development"
+NX_PACKAGE_MANAGER = "yarn"
+
+[tasks.setup]
+description = "Install dependencies and prepare environment"
+run = "node -v && yarn -v && just --version && nx --version"
