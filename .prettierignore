@@ -1,0 +1,47 @@
+# Build outputs
+/dist/
+/build/
+/.next/
+/out/
+
+# Dependencies
+node_modules/
+.yarn/
+.pnp/
+
+# Cache & temp
+/.nx/cache/
+/.nx/workspace-data/
+/tmp/
+.cache/
+.parcel-cache/
+
+# Coverage & testing
+/coverage/
+.nyc_output/
+junit.xml
+test-results/
+
+# Generated files
+*.min.js
+*.min.css
+*.generated.*
+generated/
+/prisma/migrations/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
