@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+# Load mise environment
+if command -v mise >/dev/null 2>&1; then
+    eval "$(mise activate bash --export)"
+fi
+
+echo "🔍 Running lint and format on staged files..."
+npx lint-staged

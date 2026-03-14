@@ -51,6 +51,7 @@
         "jest-util": "^30.0.2",
         "jiti": "2.4.2",
         "jsonc-eslint-parser": "^2.1.0",
+        "lint-staged": "^16.4.0",
         "nx": "21.6.10",
         "postcss": "8.4.38",
         "prettier": "~3.6.2",
@@ -83,5 +84,14 @@
     },
     "scripts": {
         "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,jsx}": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{json,md,yml,yaml}": [
+            "prettier --write"
+        ]
     }
 }
