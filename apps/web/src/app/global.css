@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme Colors */
+:root {
+  --neon-primary: #00D4FF;
+  --neon-success: #39FF14;
+  --neon-warning: #FFFF00;
+  --neon-error: #FF0040;
+}
+
+/* Custom utilities for theme colors */
+@layer utilities {
+  .bg-primary {
+    background-color: var(--neon-primary);
+  }
+  .text-primary {
+    color: var(--neon-primary);
+  }
+  .border-primary {
+    border-color: var(--neon-primary);
+  }
+  
+  .bg-success {
+    background-color: var(--neon-success);
+  }
+  .text-success {
+    color: var(--neon-success);
+  }
+  .border-success {
+    border-color: var(--neon-success);
+  }
+  
+  .bg-warning {
+    background-color: var(--neon-warning);
+  }
+  .text-warning {
+    color: var(--neon-warning);
+  }
+  .border-warning {
+    border-color: var(--neon-warning);
+  }
+  
+  .bg-error {
+    background-color: var(--neon-error);
+  }
+  .text-error {
+    color: var(--neon-error);
+  }
+  .border-error {
+    border-color: var(--neon-error);
+  }
+}
+
+/* Base styles */
+html {
+  -webkit-text-size-adjust: 100%;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif;
+  line-height: 1.5;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: inherit;
+  line-height: inherit;
+  margin: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbar styling - Used in TimeSlotSlider */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: #4B5563;
+  border-radius: 3px;
+}
+
+.scrollbar-track-gray-800::-webkit-scrollbar-track {
+  background-color: #1F2937;
+  border-radius: 3px;
+}
+
+/* Utility classes */
+.shadow {
+  box-shadow:
+    0 0 #0000,
+    0 0 #0000,
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.rounded {
+  border-radius: 1.5rem;
+}
+
+.wrapper {
+  width: 100%;
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 768px;
+  padding-bottom: 3rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: 100%;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
