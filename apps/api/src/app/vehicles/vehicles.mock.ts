@@ -63,12 +63,26 @@ export const mockVehicles: Vehicle[] = [
     },
 ];
 
+// Cache types
+type CacheType = 'vehicles' | 'timeSlots';
+
 // Runtime cache - initially empty
 export let mockVehicleTypes: GroupedVehicle[] = [];
 export let mockVehicleTimeSlots: VehicleTimeSlotTemplate[] = [];
 
 // Cache setter function
-export function setCache(vehicles: GroupedVehicle[], timeSlots: VehicleTimeSlotTemplate[]): void {
-    mockVehicleTypes = vehicles;
-    mockVehicleTimeSlots = timeSlots;
+export function setCache(
+    type: CacheType,
+    data: GroupedVehicle[] | VehicleTimeSlotTemplate[]
+): void {
+    switch (type) {
+        case 'vehicles':
+            mockVehicleTypes = data as GroupedVehicle[];
+            break;
+        case 'timeSlots':
+            mockVehicleTimeSlots = data as VehicleTimeSlotTemplate[];
+            break;
+        default:
+            throw new Error(`Unknown cache type: ${type}`);
+    }
 }

@@ -74,8 +74,8 @@ export function generateTimeSlotsForDay(
         const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
         slots.push(timeString);
 
-        // Add interval
-        currentMin += intervalMinutes;
+        // Add 45 minutes for the slot duration + interval minutes for gap
+        currentMin += 45 + intervalMinutes;
         if (currentMin >= 60) {
             currentHour += Math.floor(currentMin / 60);
             currentMin = currentMin % 60;
@@ -91,20 +91,22 @@ export function getDayOfWeek(dateString: string): string {
     return days[date.getDay()];
 }
 
-// Non-blocking cache update function
-export function updateCache(groupedVehicles: GroupedVehicle[]): void {
-    // Use setTimeout to make it non-blocking
-    setTimeout(() => {
-        const timeSlots: VehicleTimeSlotTemplate[] = [];
-        mockVehicles.forEach((vehicle) => {
-            timeSlots.push({
-                type: vehicle.type,
-                location: vehicle.location,
-                weeklySlots: generateWeeklyTimeSlots(vehicle),
-            });
-        });
+export function updateVehiclesCache(): GroupedVehicle[] {
+    const groupedVehicles = groupVehiclesByType(mockVehicles);
+    setCache('vehicles', groupedVehicles);
+    return groupedVehicles;
+}
 
-        // Update both caches in single shot
-        setCache(groupedVehicles, timeSlots);
-    }, 0); // Run after current execution stack
+export function updateTimeSlotsCache(): VehicleTimeSlotTemplate[] {
+    const timeSlots: VehicleTimeSlotTemplate[] = [];
+    mockVehicles.forEach((vehicle) => {
+        timeSlots.push({
+            type: vehicle.type,
+            location: vehicle.location,
+            weeklySlots: generateWeeklyTimeSlots(vehicle),
+        });
+    });
+
+    setCache('timeSlots', timeSlots);
+    return timeSlots;
 }

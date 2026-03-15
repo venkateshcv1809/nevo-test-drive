@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
-import { VehiclesService, GroupedVehicle } from './vehicles.service';
+import { Controller, Get, Param, Query, ParseArrayPipe } from '@nestjs/common';
+import { VehiclesService } from './vehicles.service';
+import { DateAvailabilityResponse, GroupedVehicle } from './vehicles.types';
 
 @Controller('vehicles')
 export class VehiclesController {
@@ -8,5 +9,18 @@ export class VehiclesController {
     @Get()
     async getVehicles(): Promise<GroupedVehicle[]> {
         return this.vehiclesService.getVehicles();
+    }
+
+    @Get(':type/location/:location/availability')
+    async getTypeLocationMultiAvailability(
+        @Param('type') type: string,
+        @Param('location') location: string,
+        @Query('dates', ParseArrayPipe) dates: string[]
+    ): Promise<DateAvailabilityResponse[]> {
+        return this.vehiclesService.getMultiDateAvailability({
+            vehicleType: type,
+            location,
+            dates,
+        });
     }
 }
