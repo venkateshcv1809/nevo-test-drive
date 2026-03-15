@@ -44,6 +44,7 @@ node_modules
 *.sqlite
 *.sqlite3
 *.db
+data/
 
 # Logs
 logs/
