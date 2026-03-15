@@ -19,9 +19,6 @@ export const Header: React.FC = () => {
                         </div>
                         <div className="flex flex-col justify-center">
                             <h1 className="text-xl font-bold text-primary">Nevo</h1>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                                EV Test Drive Booking
-                            </p>
                         </div>
                     </div>
 
