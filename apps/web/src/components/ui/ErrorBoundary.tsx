@@ -1,7 +1,6 @@
 'use client';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from './Button';
-import { APIErrorBoundary } from './APIErrorBoundary';
 
 // Error types for categorization
 type ErrorType = 'render' | 'network' | 'permission' | 'unknown';
@@ -284,4 +283,4 @@ const useErrorHandler = () => {
     return { captureError, resetError };
 };
 
-export { ErrorBoundary, APIErrorBoundary, useErrorHandler };
+export { useErrorHandler };
