@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Datasource configuration
+datasource db {
+  provider = "postgresql"
+}
+
+model Vehicle {
+  id                      String   @id @default(uuid())
+  vehicleId               String   @unique
+  type                    String
+  location                String
+  availableFrom           DateTime @db.Timestamptz
+  availableTo             DateTime @db.Timestamptz
+  availableDays           String[]
+  interval                Int      @default(15)
+  reservations            Reservation[]
+  createdAt               DateTime @default(now())
+}
+
+model Reservation {
+  id              String   @id @default(uuid())
+  reservationId   String   @unique
+  vehicleId       String
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [vehicleId])
+  startDateTime   DateTime @db.Timestamptz
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  status          String   @default("B")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
