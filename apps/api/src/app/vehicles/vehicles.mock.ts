@@ -1,13 +1,4 @@
-export interface Vehicle {
-    id: string;
-    type: string;
-    name: string;
-    location: string;
-    availableFromTime: string;
-    availableToTime: string;
-    availableDays: string[];
-    minimumMinutesBetweenBookings: number;
-}
+import { Vehicle, GroupedVehicle, VehicleTimeSlotTemplate } from './vehicles.types';
 
 export const mockVehicles: Vehicle[] = [
     {
@@ -71,3 +62,13 @@ export const mockVehicles: Vehicle[] = [
         minimumMinutesBetweenBookings: 15,
     },
 ];
+
+// Runtime cache - initially empty
+export let mockVehicleTypes: GroupedVehicle[] = [];
+export let mockVehicleTimeSlots: VehicleTimeSlotTemplate[] = [];
+
+// Cache setter function
+export function setCache(vehicles: GroupedVehicle[], timeSlots: VehicleTimeSlotTemplate[]): void {
+    mockVehicleTypes = vehicles;
+    mockVehicleTimeSlots = timeSlots;
+}
