@@ -13,6 +13,7 @@ interface CalendarViewProps {
     selectedVehicle?: Vehicle | null;
     selectedLocation?: string;
     allVehicles?: Vehicle[];
+    availableDays?: string[];
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -24,7 +25,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     isCalendarEnabled = false,
     selectedVehicle,
     selectedLocation,
-    allVehicles = [],
+    availableDays = [],
 }) => {
     const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -71,27 +72,25 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             (day) => day.date.toDateString() === date.toDateString()
         );
 
-        if (!dayAvailability) return 'unavailable';
+        // If we have availability data, use it
+        if (availability.length > 0) {
+            if (!dayAvailability) return 'unavailable';
 
-        // If no vehicle/location selected, show raw availability from mock data
-        if (!selectedVehicle || !selectedLocation) {
+            // Check if there are available time slots for this day
+            const availableSlots = dayAvailability.timeSlots.filter((slot) => slot.available);
+            if (availableSlots.length === 0) return 'unavailable';
+
             return dayAvailability.status;
         }
 
-        // Check if ANY vehicle of the same type has the selected location
-        const vehiclesOfSameType = allVehicles.filter(
-            (vehicle) => vehicle.type === selectedVehicle.type
-        );
-        const isVehicleTypeAtLocation = vehiclesOfSameType.some((vehicle) =>
-            vehicle.locations.includes(selectedLocation)
-        );
-        if (!isVehicleTypeAtLocation) return 'unavailable';
+        // Fallback: Use availableDays from vehicle data
+        if (!selectedVehicle || !selectedLocation) return 'high';
 
-        // Check if there are available time slots for this day
-        const availableSlots = dayAvailability.timeSlots.filter((slot) => slot.available);
-        if (availableSlots.length === 0) return 'unavailable';
+        // Check if this day of week is available
+        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+        const isDayAvailable = availableDays.includes(dayOfWeek);
 
-        return dayAvailability.status;
+        return isDayAvailable ? 'high' : 'unavailable';
     };
 
     // Check if a date is selected

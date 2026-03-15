@@ -53,6 +53,30 @@
   }
 }
 
+/* Calendar Responsive Styles */
+@layer utilities {
+  .calendar-day {
+    height: 60px !important;
+  }
+  
+  @media (min-width: 640px) {
+    .calendar-day {
+      height: 70px !important;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .calendar-day {
+      height: 80px !important;
+    }
+  }
+  
+  /* Calendar grid - no gaps for continuous borders */
+  .calendar-grid {
+    gap: 0 !important;
+  }
+}
+
 /* Base styles */
 html {
   -webkit-text-size-adjust: 100%;
@@ -68,7 +92,7 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Scrollbar styling - Used in TimeSlotSlider */
+/* Scrollbar styling */
 .scrollbar-thin {
   scrollbar-width: thin;
 }
@@ -86,33 +110,6 @@ body {
 .scrollbar-track-gray-800::-webkit-scrollbar-track {
   background-color: #1F2937;
   border-radius: 3px;
-}
-
-/* Utility classes */
-.shadow {
-  box-shadow:
-    0 0 #0000,
-    0 0 #0000,
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.rounded {
-  border-radius: 1.5rem;
-}
-
-.wrapper {
-  width: 100%;
-}
-
-.container {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 768px;
-  padding-bottom: 3rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  width: 100%;
 }
 
 /* Animations */
@@ -140,4 +137,146 @@ body {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* React Calendar Theme Overrides */
+.react-calendar-light {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem;
+  font-family: inherit;
+}
+
+.react-calendar-light .react-calendar__navigation {
+  background-color: white !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.react-calendar-light .react-calendar__navigation button {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.react-calendar-light .react-calendar__navigation button:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.react-calendar-light .react-calendar__navigation button:disabled {
+  background-color: #f9fafb !important;
+  color: #9ca3af !important;
+}
+
+.react-calendar-light .react-calendar__month-view__weekdays {
+  background-color: white !important;
+}
+
+.react-calendar-light .react-calendar__month-view__weekdays__weekday {
+  color: #6b7280 !important;
+}
+
+.react-calendar-light .react-calendar__month-view__days__day {
+  background-color: white !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.react-calendar-light .react-calendar__month-view__days__day:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.react-calendar-light .react-calendar__month-view__days__day--neighboringMonth {
+  background-color: white !important;
+  color: #9ca3af !important;
+}
+
+.react-calendar-light .react-calendar__tile--active {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.react-calendar-light .react-calendar__tile--range {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.react-calendar-light .react-calendar__tile--rangeStart {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.react-calendar-light .react-calendar__tile--rangeEnd {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Dark theme */
+.react-calendar-dark {
+  background-color: rgb(17, 24, 39) !important;
+  border: 1px solid rgb(55, 65, 81) !important;
+  border-radius: 0.5rem;
+  font-family: inherit;
+}
+
+.react-calendar-dark .react-calendar__navigation {
+  background-color: rgb(17, 24, 39) !important;
+  border-bottom: 1px solid rgb(55, 65, 81) !important;
+}
+
+.react-calendar-dark .react-calendar__navigation button {
+  background-color: rgb(31, 41, 55) !important;
+  color: rgb(243, 244, 246) !important;
+  border: 1px solid rgb(55, 65, 81) !important;
+}
+
+.react-calendar-dark .react-calendar__navigation button:hover {
+  background-color: rgb(55, 65, 81) !important;
+}
+
+.react-calendar-dark .react-calendar__navigation button:disabled {
+  background-color: rgb(31, 41, 55) !important;
+  color: rgb(107, 114, 128) !important;
+}
+
+.react-calendar-dark .react-calendar__month-view__weekdays {
+  background-color: rgb(17, 24, 39) !important;
+}
+
+.react-calendar-dark .react-calendar__month-view__weekdays__weekday {
+  color: rgb(107, 114, 128) !important;
+}
+
+.react-calendar-dark .react-calendar__month-view__days__day {
+  background-color: rgb(17, 24, 39) !important;
+  color: rgb(243, 244, 246) !important;
+  border: 1px solid rgb(55, 65, 81) !important;
+}
+
+.react-calendar-dark .react-calendar__month-view__days__day:hover {
+  background-color: rgb(55, 65, 81) !important;
+}
+
+.react-calendar-dark .react-calendar__month-view__days__day--neighboringMonth {
+  background-color: rgb(17, 24, 39) !important;
+  color: rgb(107, 114, 128) !important;
+}
+
+.react-calendar-dark .react-calendar__tile--active {
+  background-color: rgb(59, 130, 246) !important;
+  color: white !important;
+}
+
+.react-calendar-dark .react-calendar__tile--range {
+  background-color: rgb(59, 130, 246) !important;
+  color: white !important;
+}
+
+.react-calendar-dark .react-calendar__tile--rangeStart {
+  background-color: rgb(59, 130, 246) !important;
+  color: white !important;
+}
+
+.react-calendar-dark .react-calendar__tile--rangeEnd {
+  background-color: rgb(59, 130, 246) !important;
+  color: white !important;
 }
