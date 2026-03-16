@@ -24,6 +24,7 @@
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
         "paths": {
+            "@nevo/config": ["libs/shared/util/config/src/index.ts"],
             "@nevo/logger": ["libs/shared/util/logger/src/index.ts"],
             "@nevo/prisma": ["libs/shared/db/prisma/src/index.ts"]
         }
