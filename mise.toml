@@ -36,7 +36,7 @@ run = "yarn install && yarn nx reset"
 
 [tasks.db-setup]
 description = "Complete database setup (push schema + seed data)"
-depends = ["db-push", "db-seed"]  # Run in order: schema first, then data
+depends = ["db-generate", "db-push", "db-seed"]  # Run in order: schema first, then data
 run = "echo '✅ Database setup complete!'"
 
 [tasks.db-push]
@@ -74,6 +74,34 @@ run = "echo '🚀 Development environment ready!'"
 description = "Complete project reset (database + dependencies)"
 depends = ["db-reset"]  # Reset database first
 run = "yarn nx reset && echo '🔄 Full project reset complete!'"
+
+# ============================================
+# Development Server Tasks
+# ============================================
+
+[tasks.dev]
+description = "Start both API and web applications in development"
+run = "nx run-many -t serve -p api web"
+
+[tasks.api]
+description = "Start API server only"
+run = "nx serve api"
+
+[tasks.web]
+description = "Start web application only"
+run = "nx serve web"
+
+[tasks.build]
+description = "Build all applications"
+run = "nx build"
+
+[tasks.test]
+description = "Run all tests"
+run = "nx test"
+
+[tasks.lint]
+description = "Run linting on all projects"
+run = "nx lint"
 
 # ============================================
 # Usage Examples:
