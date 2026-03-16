@@ -24,7 +24,8 @@
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
         "paths": {
-            "@nevo/logger": ["libs/shared/util/logger/src/index.ts"]
+            "@nevo/logger": ["libs/shared/util/logger/src/index.ts"],
+            "@nevo/prisma": ["libs/shared/db/prisma/src/index.ts"]
         }
     },
     "exclude": ["node_modules", "tmp", "dist"]
