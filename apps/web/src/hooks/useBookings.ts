@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Booking, VehicleType } from '../data/models';
+import { Booking } from '../data/models';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -74,11 +74,6 @@ const cancelBooking = async (id: string) => {
     return apiRequest(`/v1/api/bookings/${id}`, {
         method: 'DELETE',
     });
-};
-
-// Vehicles API
-const getVehicles = async () => {
-    return apiRequest<VehicleType[]>('/v1/api/vehicles');
 };
 
 const getVehicleAvailability = async (params: {
@@ -178,13 +173,6 @@ export const useCancelBooking = () => {
 };
 
 // Vehicles hooks
-export const useVehicles = () => {
-    return useQuery({
-        queryKey: ['vehicles'],
-        queryFn: getVehicles,
-        staleTime: 1000 * 60 * 10, // 10 minutes
-    });
-};
 
 export const useVehicleAvailability = (vehicleType: string, location: string, dates: string[]) => {
     // Don't make API call if no dates provided

@@ -18,19 +18,16 @@ export type VehicleResponse = Record<string, VehicleGroup>;
 /**
  * UI Models
  */
+export interface Summary {
+    vehicleId: string;
+    vehicleName: string;
+    locationId: string;
+    locationName: string;
+    startDateTime: string;
+    endDateTime: string;
+}
 
 // API Response Models
-export interface VehicleType {
-    type: string;
-    name: string;
-    locations: VehicleLocation[];
-}
-
-export interface VehicleLocation {
-    location: string;
-    availableDays: string[];
-    vehicleIds: string[];
-}
 
 export interface TimeSlot {
     time: string;

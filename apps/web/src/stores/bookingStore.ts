@@ -1,10 +1,18 @@
 import { create } from 'zustand';
-import { Vehicle, TimeSlot, CustomerInfo } from '../data/models';
+import { Vehicle, TimeSlot, CustomerInfo, Summary } from '../data/models';
 
-// Booking state interface
+type BookingStep = 'date' | 'time';
+
 interface BookingState {
+    //Navigation
+    currentStep: BookingStep;
+
+    //Selections
     selectedVehicle: string | null;
     selectedLocation: string | null;
+
+    // Summary
+    summary: Summary | null;
     allVehicles: Vehicle[];
 
     // Date/time selection
@@ -21,15 +29,17 @@ interface BookingState {
     error: string | null;
 }
 
-// Store actions
 interface BookingActions {
+    // Selection actions
     setSelectedVehicle: (vehicle: string | null) => void;
     setSelectedLocation: (location: string | null) => void;
+    setStep: (step: BookingStep) => void;
+    toggleDateSelection: (date: Date) => void;
+
     setAllVehicles: (vehicles: Vehicle[]) => void;
 
     // Date/time actions
     setBookingDate: (date: Date | null) => void;
-    toggleDateSelection: (date: Date) => void;
     setSelectedTimeSlotWithDate: (timeSlot: { date: Date; timeSlot: TimeSlot } | null) => void;
 
     // Customer actions
@@ -47,6 +57,8 @@ export const useBookingStore = create<BookingState & BookingActions>((set, get) 
     // Initial state
     selectedVehicle: null,
     selectedLocation: null,
+    summary: null,
+    currentStep: 'date',
     allVehicles: [],
     bookingDate: null,
     selectedDates: [],
@@ -62,6 +74,7 @@ export const useBookingStore = create<BookingState & BookingActions>((set, get) 
 
     setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
     setSelectedLocation: (location) => set({ selectedLocation: location }),
+    setStep: (step) => set({ currentStep: step }),
     setAllVehicles: (vehicles) => set({ allVehicles: vehicles }),
 
     // Date/time actions
