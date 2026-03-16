@@ -1,3 +1,28 @@
+/**
+ * API Response Models
+ */
+export interface VehicleLocation {
+    locationId: string;
+    locationName: string;
+    availableDays: string[];
+}
+
+export interface VehicleGroup {
+    vehicleType: string;
+    vehicleName: string;
+    locations: Record<string, VehicleLocation>;
+}
+
+export type VehicleResponse = Record<string, VehicleGroup>;
+
+/**
+ * UI Models
+ */
+export interface SelectedVehicle {
+    id: string;
+    name: string;
+}
+
 // API Response Models
 export interface VehicleType {
     type: string;

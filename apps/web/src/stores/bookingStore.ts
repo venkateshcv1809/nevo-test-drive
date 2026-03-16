@@ -1,10 +1,9 @@
 import { create } from 'zustand';
-import { Vehicle, DayAvailability, TimeSlot, CustomerInfo } from '../data/models';
+import { Vehicle, DayAvailability, TimeSlot, CustomerInfo, SelectedVehicle } from '../data/models';
 
 // Booking state interface
 interface BookingState {
-    // Vehicle selection
-    selectedVehicle: Vehicle | null;
+    selectedVehicle: SelectedVehicle | null;
     selectedLocation: string | null;
     allVehicles: Vehicle[];
 
@@ -25,12 +24,9 @@ interface BookingState {
 
 // Store actions
 interface BookingActions {
-    // Vehicle actions
-    setSelectedVehicle: (vehicle: Vehicle | null) => void;
+    setSelectedVehicle: (vehicle: SelectedVehicle | null) => void;
     setSelectedLocation: (location: string | null) => void;
     setAllVehicles: (vehicles: Vehicle[]) => void;
-    selectVehicle: (vehicle: Vehicle) => void;
-    selectLocation: (location: string) => void;
 
     // Date/time actions
     setBookingDate: (date: Date | null) => void;
@@ -67,14 +63,9 @@ export const useBookingStore = create<BookingState & BookingActions>((set, get) 
     loading: false,
     error: null,
 
-    // Vehicle actions
     setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
     setSelectedLocation: (location) => set({ selectedLocation: location }),
     setAllVehicles: (vehicles) => set({ allVehicles: vehicles }),
-
-    // Convenience functions
-    selectVehicle: (vehicle: Vehicle) => set({ selectedVehicle: vehicle }),
-    selectLocation: (location: string) => set({ selectedLocation: location }),
 
     // Date/time actions
     setBookingDate: (date) => set({ bookingDate: date }),
