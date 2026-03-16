@@ -28,6 +28,8 @@ services:
         depends_on:
             nevo-postgres:
                 condition: service_healthy
+        volumes:
+            - ./data/pgadmin:/var/lib/pgadmin
         healthcheck:
             test:
                 [

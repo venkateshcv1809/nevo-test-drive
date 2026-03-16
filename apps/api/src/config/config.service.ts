@@ -4,10 +4,7 @@ import { Injectable } from '@nestjs/common';
 export class ConfigService {
     // Database configuration
     get databaseUrl(): string {
-        return (
-            process.env.DATABASE_URL ||
-            'postgresql://nevo_user:nevo_password@localhost:5432/nevo_test_drive'
-        );
+        return process.env.DATABASE_URL || '';
     }
 
     // Application configuration
