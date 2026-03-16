@@ -10,10 +10,11 @@ const nextConfig = {
     // See: https://nx.dev/recipes/next/next-config-setup
     nx: {},
     async rewrites() {
+        const apiPort = process.env.API_PORT || '8080';
         return [
             {
                 source: '/api/:path*',
-                destination: 'http://localhost:3000/api/:path*',
+                destination: `http://localhost:${apiPort}/v1/api/:path*`,
             },
         ];
     },
