@@ -1,35 +1,86 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 // Datasource configuration
 datasource db {
-  provider = "postgresql"
+    provider = "postgresql"
 }
 
+// Vehicle model represents available vehicles for reservation
+// Contains vehicle details, availability schedule, and location information
+//
+// Fields:
+// - id: System generated UUID for internal usage
+// - vehicleId: Human-readable unique ID for physical car (tesla_1001, vw_dub_001, etc.)
+// - type: Vehicle model name for system processing (tesla_model3, Volkswagen_ID4, etc.)
+// - name: Human-readable vehicle display name (Tesla Model 3, Volkswagen ID.4, etc.)
+// - locationId: Unique ID for processing (dublin, cork, etc.)
+// - location: Human-readable location name for UI display (Dublin, Cork, etc.)
+// - availableFrom: Start time ISO with fixed date (2000-01-01T08:00:00.000Z, etc.)
+// - availableTo: End time ISO with fixed date (2000-01-01T18:00:00.000Z, etc.)
+// - availableDays: Array of 3-letter day codes (MON, TUE, WED, etc.)
+// - interval: Minimum minutes between bookings (15, 30, etc.)
+// - reservations: Virtual relationship to Reservation model
+// - createdAt: Record creation timestamp
 model Vehicle {
-  id                      String   @id @default(uuid())
-  vehicleId               String   @unique
-  type                    String
-  location                String
-  availableFrom           DateTime @db.Timestamptz
-  availableTo             DateTime @db.Timestamptz
-  availableDays           String[]
-  interval                Int      @default(15)
-  reservations            Reservation[]
-  createdAt               DateTime @default(now())
+    id                      String   @id @default(uuid())
+    vehicleId               String   @unique
+    type                    String
+    name                    String
+    locationId              String
+    location                String
+    availableFrom           DateTime @db.Timestamptz
+    availableTo             DateTime @db.Timestamptz
+    availableDays           String[]
+    interval                Int      @default(15)
+    createdAt               DateTime @default(now())
+    reservations            Reservation[]
+
+    // Performance indexes for common query patterns
+    @@index([vehicleId])
+    @@index([type])
+    @@index([locationId])
+    @@index([availableFrom, availableTo])
+    @@index([availableFrom, availableTo, locationId])
 }
 
+// Reservation model represents customer bookings for vehicles
+// Contains booking details, customer information, and reservation status
+//
+// Fields:
+// - id: Primary key UUID for internal reference
+// - reservationId: Human readable ID for QR code display (NEVO-20250316-001, etc.)
+// - vehicle: Virtual relationship to Vehicle model
+// - vehicleId: Foreign key referencing Vehicle.vehicleId
+// - startDateTime: Start time in UTC ISO format (2026-03-01T09:00:00Z)
+// - endDateTime: End time in UTC ISO format (2026-03-01T09:45:00Z)
+// - customerName: Customer's full name
+// - customerEmail: Customer's email for notifications
+// - customerPhone: Customer's phone for contact
+// - status: Reservation status (B=Booked, C=Completed, D=Deleted)
+// - createdAt: Record creation timestamp
+// - updatedAt: Last update timestamp
 model Reservation {
-  id              String   @id @default(uuid())
-  reservationId   String   @unique
-  vehicleId       String
-  vehicle         Vehicle  @relation(fields: [vehicleId], references: [vehicleId])
-  startDateTime   DateTime @db.Timestamptz
-  customerName    String
-  customerEmail   String
-  customerPhone   String
-  status          String   @default("B")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+    id              String   @id @default(uuid())
+    reservationId   String   @unique
+    vehicle         Vehicle  @relation(fields: [vehicleId], references: [vehicleId])
+    vehicleId       String
+    startDateTime   DateTime @db.Timestamptz
+    endDateTime     DateTime @db.Timestamptz
+    customerName    String
+    customerEmail   String
+    customerPhone   String
+    status          String   @default("B")
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+
+    // Performance indexes for common query patterns
+    @@index([reservationId])
+    @@index([vehicleId])
+    @@index([startDateTime])
+    @@index([endDateTime])
+    @@index([vehicleId, startDateTime])
+    @@index([vehicleId, endDateTime])
 }

@@ -1,91 +1,90 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 import 'dotenv/config';
+import { PrismaClient } from '../generated/prisma';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-// 1. Manually build the URL to avoid .env interpolation issues during execution
-const {
-    POSTGRES_USER,
-    POSTGRES_PASSWORD,
-    POSTGRES_HOST,
-    POSTGRES_PORT,
-    POSTGRES_DB,
-    DATABASE_URL,
-} = process.env;
-
-// Use the full DATABASE_URL if it exists and doesn't contain ${},
-// otherwise fall back to manual construction.
-const connectionString =
-    DATABASE_URL && !DATABASE_URL.includes('${')
-        ? DATABASE_URL
-        : `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
-
-console.log(`🔗 Connecting to: ${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`);
-
-const pool = new pg.Pool({ connectionString });
+const connectionString = `${process.env.DATABASE_URL}`;
+const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 // Mock vehicle data matching the new schema structure
 const mockVehicles = [
     {
-        id: 'tesla_1001',
-        vehicleId: 'TESLA-M3-DUB-001',
+        vehicleId: 'tesla_1001',
         type: 'tesla_model3',
-        location: 'dublin',
+        name: 'Tesla Model 3',
+        locationId: 'dublin',
+        location: 'Dublin',
         availableFrom: new Date('2000-01-01T08:00:00.000Z'),
         availableTo: new Date('2000-01-01T18:00:00.000Z'),
         availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
-        interval: 30,
+        interval: 15,
     },
     {
-        id: 'tesla_1002',
-        vehicleId: 'TESLA-M3-DUB-002',
-        type: 'tesla_model3',
-        location: 'dublin',
-        availableFrom: new Date('2000-01-01T08:00:00.000Z'),
-        availableTo: new Date('2000-01-01T18:00:00.000Z'),
-        availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
-        interval: 30,
-    },
-    {
-        id: 'tesla_1003',
-        vehicleId: 'TESLA-MX-DUB-001',
+        vehicleId: 'tesla_1002',
         type: 'tesla_modelx',
-        location: 'dublin',
+        name: 'Tesla Model X',
+        locationId: 'dublin',
+        location: 'Dublin',
         availableFrom: new Date('2000-01-01T10:00:00.000Z'),
         availableTo: new Date('2000-01-01T20:00:00.000Z'),
-        availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+        availableDays: ['MON', 'TUE', 'THU', 'FRI', 'SAT'],
         interval: 15,
     },
     {
-        id: 'tesla_1004',
-        vehicleId: 'TESLA-M3-COR-001',
-        type: 'tesla_model3',
-        location: 'cork',
-        availableFrom: new Date('2000-01-01T08:00:00.000Z'),
-        availableTo: new Date('2000-01-01T18:00:00.000Z'),
-        availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
-        interval: 15,
-    },
-    {
-        id: 'tesla_1005',
-        vehicleId: 'TESLA-MX-COR-001',
-        type: 'tesla_modelx',
-        location: 'cork',
-        availableFrom: new Date('2000-01-01T10:00:00.000Z'),
-        availableTo: new Date('2000-01-01T20:00:00.000Z'),
-        availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
-        interval: 15,
-    },
-    {
-        id: 'tesla_1006',
-        vehicleId: 'TESLA-MY-SFO-001',
+        vehicleId: 'tesla_1003',
         type: 'tesla_modely',
-        location: 'san_francisco',
-        availableFrom: new Date('2000-01-01T16:00:00.000Z'),
-        availableTo: new Date('2000-01-01T02:00:00.000Z'),
+        name: 'Tesla Model Y',
+        locationId: 'dublin',
+        location: 'Dublin',
+        availableFrom: new Date('2000-01-01T10:00:00.000Z'),
+        availableTo: new Date('2000-01-01T16:00:00.000Z'),
+        availableDays: ['FRI', 'SAT', 'SUN'],
+        interval: 15,
+    },
+    {
+        vehicleId: 'tesla_1004',
+        type: 'tesla_model3',
+        name: 'Tesla Model 3',
+        locationId: 'cork',
+        location: 'Cork',
+        availableFrom: new Date('2000-01-01T08:00:00.000Z'),
+        availableTo: new Date('2000-01-01T18:00:00.000Z'),
         availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
+        interval: 30,
+    },
+    {
+        vehicleId: 'tesla_1005',
+        type: 'tesla_modelx',
+        name: 'Tesla Model X',
+        locationId: 'cork',
+        location: 'Cork',
+        availableFrom: new Date('2000-01-01T10:00:00.000Z'),
+        availableTo: new Date('2000-01-01T20:00:00.000Z'),
+        availableDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
+        interval: 15,
+    },
+    {
+        vehicleId: 'tesla_1006',
+        type: 'tesla_modely',
+        name: 'Tesla Model Y',
+        locationId: 'cork',
+        location: 'Cork',
+        availableFrom: new Date('2000-01-01T10:00:00.000Z'),
+        availableTo: new Date('2000-01-01T16:00:00.000Z'),
+        availableDays: ['FRI', 'SAT', 'SUN'],
+        interval: 15,
+    },
+    {
+        vehicleId: 'tesla_1007',
+        type: 'tesla_modely',
+        name: 'Tesla Model Y',
+        locationId: 'cork',
+        location: 'Cork',
+        availableFrom: new Date('2000-01-01T10:00:00.000Z'),
+        availableTo: new Date('2000-01-01T16:00:00.000Z'),
+        availableDays: ['FRI', 'SAT', 'SUN'],
         interval: 15,
     },
 ];
@@ -93,28 +92,31 @@ const mockVehicles = [
 // Mock reservation data matching the new schema structure
 const mockReservations = [
     {
-        id: 'res_001',
         reservationId: 'NEVO-20250316-001',
-        vehicleId: 'TESLA-M3-DUB-001',
-        startDateTime: new Date('2024-03-16T09:00:00.000Z'),
+        vehicleId: 'tesla_1001',
+        startDateTime: new Date('2026-03-01T09:00:00.000Z'),
+        endDateTime: new Date('2026-03-01T09:45:00.000Z'),
+        durationMins: 45,
         customerName: 'John Smith',
         customerEmail: 'john.smith@email.com',
         customerPhone: '+353851234567',
     },
     {
-        id: 'res_002',
         reservationId: 'NEVO-20250316-002',
-        vehicleId: 'TESLA-M3-DUB-002',
-        startDateTime: new Date('2024-03-16T09:00:00.000Z'),
+        vehicleId: 'tesla_1002',
+        startDateTime: new Date('2026-03-01T10:00:00.000Z'),
+        endDateTime: new Date('2026-03-01T10:45:00.000Z'),
+        durationMins: 45,
         customerName: "Sarah O'Connor",
         customerEmail: 'sarah.oconnor@email.com',
         customerPhone: '+353859876543',
     },
     {
-        id: 'res_003',
         reservationId: 'NEVO-20250316-003',
-        vehicleId: 'TESLA-M3-DUB-001',
-        startDateTime: new Date('2024-03-16T11:30:00.000Z'),
+        vehicleId: 'tesla_1001',
+        startDateTime: new Date('2026-03-01T11:30:00.000Z'),
+        endDateTime: new Date('2026-03-01T12:15:00.000Z'),
+        durationMins: 45,
         customerName: 'Jill Jones',
         customerEmail: 'jill.jones@email.com',
         customerPhone: '+353879876543',
@@ -136,9 +138,10 @@ async function main() {
             mockVehicles.map((vehicle) =>
                 prisma.vehicle.create({
                     data: {
-                        id: vehicle.id,
                         vehicleId: vehicle.vehicleId,
                         type: vehicle.type,
+                        name: vehicle.name,
+                        locationId: vehicle.locationId,
                         location: vehicle.location,
                         availableFrom: vehicle.availableFrom,
                         availableTo: vehicle.availableTo,
@@ -156,10 +159,10 @@ async function main() {
             mockReservations.map((reservation) =>
                 prisma.reservation.create({
                     data: {
-                        id: reservation.id,
                         reservationId: reservation.reservationId,
                         vehicleId: reservation.vehicleId,
                         startDateTime: reservation.startDateTime,
+                        endDateTime: reservation.endDateTime,
                         customerName: reservation.customerName,
                         customerEmail: reservation.customerEmail,
                         customerPhone: reservation.customerPhone,
