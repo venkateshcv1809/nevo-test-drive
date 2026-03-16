@@ -1,4 +1,4 @@
-import { Vehicle, GroupedVehicle, VehicleTimeSlotTemplate } from './vehicles.types';
+import { Vehicle, VehicleTimeSlotTemplate } from './vehicles.types';
 
 export const mockVehicles: Vehicle[] = [
     {
@@ -67,18 +67,11 @@ export const mockVehicles: Vehicle[] = [
 type CacheType = 'vehicles' | 'timeSlots';
 
 // Runtime cache - initially empty
-export let mockVehicleTypes: GroupedVehicle[] = [];
 export let mockVehicleTimeSlots: VehicleTimeSlotTemplate[] = [];
 
 // Cache setter function
-export function setCache(
-    type: CacheType,
-    data: GroupedVehicle[] | VehicleTimeSlotTemplate[]
-): void {
+export function setCache(type: CacheType, data: VehicleTimeSlotTemplate[]): void {
     switch (type) {
-        case 'vehicles':
-            mockVehicleTypes = data as GroupedVehicle[];
-            break;
         case 'timeSlots':
             mockVehicleTimeSlots = data as VehicleTimeSlotTemplate[];
             break;

@@ -9,17 +9,19 @@ export interface Vehicle {
     minimumMinutesBetweenBookings: number;
 }
 
-export interface GroupedVehicle {
-    type: string;
-    name: string;
-    locations: LocationInfo[];
+export interface VehicleLocation {
+    locationId: string;
+    locationName: string;
+    availableDays: string[];
 }
 
-export interface LocationInfo {
-    location: string;
-    availableDays: string[];
-    vehicleIds: string[];
+export interface VehicleGroup {
+    vehicleType: string;
+    vehicleName: string;
+    locations: Record<string, VehicleLocation>;
 }
+
+export type VehicleResponse = Record<string, VehicleGroup>;
 
 export interface VehicleTimeSlotTemplate {
     type: string;

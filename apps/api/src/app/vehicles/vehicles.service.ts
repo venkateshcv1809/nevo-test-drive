@@ -1,16 +1,56 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { mockVehicles, mockVehicleTypes, mockVehicleTimeSlots } from './vehicles.mock';
+import { PrismaService } from '@nevo/prisma';
+import { Logger } from '@nevo/logger';
+import { mockVehicles, mockVehicleTimeSlots } from './vehicles.mock';
 import {
-    GroupedVehicle,
     TimeSlot,
     DateAvailabilityRequest,
     DateAvailabilityResponse,
     MultiDateAvailabilityRequest,
+    VehicleResponse,
 } from './vehicles.types';
-import { updateVehiclesCache, updateTimeSlotsCache } from './vehicles.utils';
+import { updateTimeSlotsCache } from './vehicles.utils';
 
 @Injectable()
 export class VehiclesService {
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly logger: Logger
+    ) {}
+    async getVehicles(): Promise<VehicleResponse> {
+        this.logger.log('Generating optimized vehicle lookup map');
+
+        try {
+            const dbVehicles = await this.prisma.vehicle.findMany();
+
+            return dbVehicles.reduce(
+                (acc, vehicle) => {
+                    if (!acc[vehicle.type]) {
+                        acc[vehicle.type] = {
+                            vehicleType: vehicle.type,
+                            vehicleName: vehicle.name,
+                            locations: {},
+                        };
+                    }
+
+                    if (!acc[vehicle.type].locations[vehicle.locationId]) {
+                        acc[vehicle.type].locations[vehicle.locationId] = {
+                            locationId: vehicle.locationId,
+                            locationName: vehicle.location,
+                            availableDays: vehicle.availableDays,
+                        };
+                    }
+
+                    return acc;
+                },
+                {} as Record<string, any>
+            );
+        } catch (error) {
+            this.logger.error('Failed to generate vehicle lookup');
+            throw error;
+        }
+    }
+
     private isInBookingWindow(date: string): boolean {
         const requestedDate = new Date(date);
         const today = new Date();
@@ -47,15 +87,6 @@ export class VehiclesService {
 
     private sortDates(dates: string[]): string[] {
         return dates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    }
-
-    async getVehicles(): Promise<GroupedVehicle[]> {
-        // Cache hit: return cached grouped data
-        if (mockVehicleTypes.length !== 0) {
-            return mockVehicleTypes;
-        }
-
-        return updateVehiclesCache();
     }
 
     async getDateAvailability(request: DateAvailabilityRequest): Promise<DateAvailabilityResponse> {

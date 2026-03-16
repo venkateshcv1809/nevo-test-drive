@@ -1,43 +1,5 @@
 import { mockVehicles, setCache } from './vehicles.mock';
-import { Vehicle, GroupedVehicle, LocationInfo, VehicleTimeSlotTemplate } from './vehicles.types';
-
-export function groupVehiclesByType(vehicles: Vehicle[]): GroupedVehicle[] {
-    const grouped: Record<string, GroupedVehicle> = {};
-    const locationMap: Record<string, LocationInfo[]> = {};
-
-    vehicles.forEach((vehicle) => {
-        const typeKey = vehicle.type;
-        if (!locationMap[typeKey]) {
-            locationMap[typeKey] = [];
-        }
-
-        const existingLocation = locationMap[typeKey].find(
-            (loc) => loc.location === vehicle.location
-        );
-
-        if (!existingLocation) {
-            locationMap[typeKey].push({
-                location: vehicle.location,
-                availableDays: vehicle.availableDays,
-                vehicleIds: [vehicle.id],
-            });
-        } else {
-            existingLocation.vehicleIds.push(vehicle.id);
-        }
-    });
-
-    vehicles.forEach((vehicle) => {
-        if (!grouped[vehicle.type]) {
-            grouped[vehicle.type] = {
-                type: vehicle.type,
-                name: vehicle.name,
-                locations: locationMap[vehicle.type] || [],
-            };
-        }
-    });
-
-    return Object.values(grouped);
-}
+import { Vehicle, VehicleTimeSlotTemplate } from './vehicles.types';
 
 export function generateWeeklyTimeSlots(vehicle: Vehicle): { [day: string]: string[] } {
     const slots: { [day: string]: string[] } = {};
@@ -89,12 +51,6 @@ export function getDayOfWeek(dateString: string): string {
     const date = new Date(dateString);
     const days = ['sun', 'mon', 'tue', 'wed', 'thur', 'fri', 'sat'];
     return days[date.getDay()];
-}
-
-export function updateVehiclesCache(): GroupedVehicle[] {
-    const groupedVehicles = groupVehiclesByType(mockVehicles);
-    setCache('vehicles', groupedVehicles);
-    return groupedVehicles;
 }
 
 export function updateTimeSlotsCache(): VehicleTimeSlotTemplate[] {

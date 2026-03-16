@@ -1,14 +1,14 @@
 import { Controller, Get, Param, Query, ParseArrayPipe } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
-import { DateAvailabilityResponse, GroupedVehicle } from './vehicles.types';
+import { DateAvailabilityResponse, VehicleResponse } from './vehicles.types';
 
 @Controller('vehicles')
 export class VehiclesController {
     constructor(private readonly vehiclesService: VehiclesService) {}
 
     @Get()
-    async getVehicles(): Promise<GroupedVehicle[]> {
-        return this.vehiclesService.getVehicles();
+    async getVehicles(): Promise<VehicleResponse> {
+        return await this.vehiclesService.getVehicles();
     }
 
     @Get(':type/location/:location/availability')
