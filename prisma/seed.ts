@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { logger } from '../libs/shared/util/logger/src';
 import { PrismaClient } from '../generated/prisma';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -8,7 +9,6 @@ const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-// Mock vehicle data matching the new schema structure
 const mockVehicles = [
     {
         vehicleId: 'tesla_1001',
@@ -89,7 +89,6 @@ const mockVehicles = [
     },
 ];
 
-// Mock reservation data matching the new schema structure
 const mockReservations = [
     {
         reservationId: 'NEVO-20250316-001',
@@ -124,14 +123,14 @@ const mockReservations = [
 ];
 
 async function main() {
-    console.log('🚀 Seeding database...');
+    logger.info('🚀 Seeding database...');
 
     try {
         // 1. Clear existing data to avoid unique constraint errors
         await prisma.reservation.deleteMany();
         await prisma.vehicle.deleteMany();
 
-        console.log('🧹 Cleared existing data');
+        logger.info('🧹 Cleared existing data');
 
         // 2. Create vehicles from mock data
         const vehicles = await Promise.all(
@@ -152,7 +151,7 @@ async function main() {
             )
         );
 
-        console.log(`✅ Seeded ${vehicles.length} vehicles`);
+        logger.info(`✅ Seeded ${vehicles.length} vehicles`);
 
         // 3. Create reservations from mock data
         const reservations = await Promise.all(
@@ -172,25 +171,25 @@ async function main() {
             )
         );
 
-        console.log(`✅ Seeded ${reservations.length} reservations`);
+        logger.info(`✅ Seeded ${reservations.length} reservations`);
 
-        console.log('🎉 Database seeding completed successfully!');
+        logger.info('🎉 Database seeding completed successfully!');
 
         // 4. Display summary
-        console.log('\n📊 Summary:');
-        console.log(`- Vehicles: ${vehicles.length}`);
-        console.log(`- Reservations: ${reservations.length}`);
-        console.log(`- Locations: ${[...new Set(vehicles.map((v) => v.location))].join(', ')}`);
-        console.log(`- Vehicle Types: ${[...new Set(vehicles.map((v) => v.type))].join(', ')}`);
+        logger.info('\n📊 Summary:');
+        logger.info(`- Vehicles: ${vehicles.length}`);
+        logger.info(`- Reservations: ${reservations.length}`);
+        logger.info(`- Locations: ${[...new Set(vehicles.map((v) => v.location))].join(', ')}`);
+        logger.info(`- Vehicle Types: ${[...new Set(vehicles.map((v) => v.type))].join(', ')}`);
     } catch (error) {
-        console.error('❌ Error seeding database:', error);
+        logger.error(error, '❌ Error seeding database:');
         throw error;
     }
 }
 
 main()
     .catch((e) => {
-        console.error(e);
+        logger.error(e);
         process.exit(1);
     })
     .finally(async () => {

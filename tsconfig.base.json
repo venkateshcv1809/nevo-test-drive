@@ -23,7 +23,9 @@
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
-        "paths": {}
+        "paths": {
+            "@nevo/logger": ["libs/shared/util/logger/src/index.ts"]
+        }
     },
     "exclude": ["node_modules", "tmp", "dist"]
 }
