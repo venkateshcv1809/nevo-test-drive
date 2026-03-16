@@ -21,7 +21,7 @@ export const VehicleSelectors = () => {
     const locationOptions = useMemo(() => {
         if (!selectedVehicle || !vehicles) return [];
 
-        const vehicleData = vehicles[selectedVehicle.id];
+        const vehicleData = vehicles[selectedVehicle];
         if (!vehicleData) return [];
 
         return Object.entries(vehicleData.locations).map(([, loc]) => ({
@@ -34,7 +34,7 @@ export const VehicleSelectors = () => {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Dropdown
                 label="Select Vehicle"
-                value={selectedVehicle?.id || ''}
+                value={selectedVehicle || ''}
                 options={vehicleOptions}
                 placeholder="Choose your EV"
                 disabled={isLoading}
@@ -44,10 +44,7 @@ export const VehicleSelectors = () => {
 
                     const isLocationStillValid =
                         selectedLocation && !!newData.locations[selectedLocation];
-                    setSelectedVehicle({
-                        id: vehicleType,
-                        name: newData.vehicleName,
-                    });
+                    setSelectedVehicle(vehicleType);
 
                     if (!isLocationStillValid) {
                         setSelectedLocation('');

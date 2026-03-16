@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { Vehicle, DayAvailability, TimeSlot, CustomerInfo, SelectedVehicle } from '../data/models';
+import { Vehicle, TimeSlot, CustomerInfo } from '../data/models';
 
 // Booking state interface
 interface BookingState {
-    selectedVehicle: SelectedVehicle | null;
+    selectedVehicle: string | null;
     selectedLocation: string | null;
     allVehicles: Vehicle[];
 
@@ -11,7 +11,6 @@ interface BookingState {
     bookingDate: Date | null;
     selectedDates: Date[];
     selectedTimeSlotWithDate: { date: Date; timeSlot: TimeSlot } | null;
-    availability: DayAvailability[];
 
     // Customer information
     customerInfo: CustomerInfo;
@@ -24,7 +23,7 @@ interface BookingState {
 
 // Store actions
 interface BookingActions {
-    setSelectedVehicle: (vehicle: SelectedVehicle | null) => void;
+    setSelectedVehicle: (vehicle: string | null) => void;
     setSelectedLocation: (location: string | null) => void;
     setAllVehicles: (vehicles: Vehicle[]) => void;
 
@@ -32,7 +31,6 @@ interface BookingActions {
     setBookingDate: (date: Date | null) => void;
     toggleDateSelection: (date: Date) => void;
     setSelectedTimeSlotWithDate: (timeSlot: { date: Date; timeSlot: TimeSlot } | null) => void;
-    setAvailability: (availability: DayAvailability[]) => void;
 
     // Customer actions
     updateCustomerInfo: (info: Partial<CustomerInfo>) => void;
@@ -53,7 +51,6 @@ export const useBookingStore = create<BookingState & BookingActions>((set, get) 
     bookingDate: null,
     selectedDates: [],
     selectedTimeSlotWithDate: null,
-    availability: [],
     customerInfo: {
         name: '',
         email: '',
@@ -93,7 +90,6 @@ export const useBookingStore = create<BookingState & BookingActions>((set, get) 
         }
     },
     setSelectedTimeSlotWithDate: (timeSlot) => set({ selectedTimeSlotWithDate: timeSlot }),
-    setAvailability: (availability) => set({ availability }),
 
     // Customer actions
     updateCustomerInfo: (info) =>
@@ -115,7 +111,6 @@ export const useBookingStore = create<BookingState & BookingActions>((set, get) 
             bookingDate: null,
             selectedDates: [],
             selectedTimeSlotWithDate: null,
-            availability: [],
             customerInfo: {
                 name: '',
                 email: '',

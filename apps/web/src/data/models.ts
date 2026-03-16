@@ -18,10 +18,6 @@ export type VehicleResponse = Record<string, VehicleGroup>;
 /**
  * UI Models
  */
-export interface SelectedVehicle {
-    id: string;
-    name: string;
-}
 
 // API Response Models
 export interface VehicleType {
@@ -48,14 +44,6 @@ export interface Vehicle {
     type: string;
     name: string;
     locations: string[];
-}
-
-export interface DayAvailability {
-    date: Date;
-    availableSlots: number;
-    totalSlots: number;
-    status: 'high' | 'limited' | 'booked' | 'unavailable';
-    timeSlots: TimeSlot[];
 }
 
 export interface Booking {
