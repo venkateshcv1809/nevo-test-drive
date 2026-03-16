@@ -11,11 +11,21 @@ NC='\033[0m'
 
 printf "${BLUE}🏎️  Nevo Test Drive | Initializing Environment...${NC}\n"
 
+# 0. Check if in project directory, clone if not
+if [ ! -f "mise.toml" ]; then
+    printf "${BLUE}📥 Cloning Nevo Test Drive project...${NC}\n"
+    git clone https://github.com/venkateshcv1809/nevo-test-drive.git nevo-test-drive-temp
+    mv nevo-test-drive-temp/* . 2>/dev/null || true
+    mv nevo-test-drive-temp/.* . 2>/dev/null || true
+    rmdir nevo-test-drive-temp
+    printf "${GREEN}✅ Project downloaded.${NC}\n"
+fi
+
 # 1. Check/Install Mise
 if ! command -v mise > /dev/null 2>&1; then
     printf "${BLUE}Installing mise (Tool Version Manager)...${NC}\n"
     curl https://mise.jdx.dev/install.sh | sh
-    # Add mise to the current path for this session
+    # Add mise to current path for this session
     export PATH="$HOME/.local/bin:$PATH"
     printf "${GREEN}✅ Mise installed.${NC}\n"
 else
