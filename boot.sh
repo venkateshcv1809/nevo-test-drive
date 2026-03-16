@@ -12,12 +12,18 @@ NC='\033[0m'
 printf "${BLUE}🏎️  Nevo Test Drive | Initializing Environment...${NC}\n"
 
 # 0. Check if in project directory, clone if not
-if [ ! -f "mise.toml" ]; then
+if [ ! -f "mise.toml" ] && [ ! -f ".mise.toml" ]; then
     printf "${BLUE}📥 Cloning Nevo Test Drive project...${NC}\n"
-    git clone https://github.com/venkateshcv1809/nevo-test-drive.git nevo-test-drive-temp
-    mv nevo-test-drive-temp/* . 2>/dev/null || true
-    mv nevo-test-drive-temp/.* . 2>/dev/null || true
-    rmdir nevo-test-drive-temp
+    
+    # Check if directory is empty. Git clone needs an empty directory to clone into '.'
+    if [ "$(ls -A .)" ]; then
+        printf "${RED}⚠️  Directory not empty! Cloning into subfolder instead...${NC}\n"
+        git clone https://github.com/venkateshcv1809/nevo-test-drive.git
+        cd nevo-test-drive
+    else
+        # Clone directly into the current directory
+        git clone https://github.com/venkateshcv1809/nevo-test-drive.git .
+    fi
     printf "${GREEN}✅ Project downloaded.${NC}\n"
 fi
 
