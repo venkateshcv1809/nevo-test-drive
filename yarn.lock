@@ -3612,10 +3612,10 @@ __metadata:
   linkType: hard
 
 "@nestjs/common@npm:^11.0.0":
-  version: 11.1.16
-  resolution: "@nestjs/common@npm:11.1.16"
+  version: 11.1.17
+  resolution: "@nestjs/common@npm:11.1.17"
   dependencies:
-    file-type: 21.3.0
+    file-type: 21.3.2
     iterare: 1.2.1
     load-esm: 1.0.3
     tslib: 2.8.1
@@ -3630,13 +3630,13 @@ __metadata:
       optional: true
     class-validator:
       optional: true
-  checksum: f304b1a976a30ba30510942eae64f2dcfcf94294fb871bb6db45797a2e01076116850a472b5a528a62bdf58967f3db62ff08504a126a49dc93dfc3b9c45a5bb8
+  checksum: f4cf278b54c57ef119bf48a05b2730a4e3841e2675b783e809de51bc1dce3ca08a65c6292ff5213c70485f7427acd902590a68e5050325f98daa2563792508a2
   languageName: node
   linkType: hard
 
 "@nestjs/core@npm:^11.0.0":
-  version: 11.1.16
-  resolution: "@nestjs/core@npm:11.1.16"
+  version: 11.1.17
+  resolution: "@nestjs/core@npm:11.1.17"
   dependencies:
     "@nuxt/opencollective": 0.4.1
     fast-safe-stringify: 2.1.1
@@ -3658,13 +3658,13 @@ __metadata:
       optional: true
     "@nestjs/websockets":
       optional: true
-  checksum: 4f44337c528d04d540bb53941425f27fa7034313feb36b536050afe83f81d3a95b5b9ae5ddf07eca9aa8c68798b3dd65bcc1db4f160d8099eaec72e5e79f3dac
+  checksum: 2788661a925869419ac60ad0939bb7b201111262dbaf11a75a907d6cbc9aafbfd8283600e0fc4296dca5cb81c92fd88fcb39be5b4105045235de34fb2591b225
   languageName: node
   linkType: hard
 
 "@nestjs/platform-express@npm:^11.0.0":
-  version: 11.1.16
-  resolution: "@nestjs/platform-express@npm:11.1.16"
+  version: 11.1.17
+  resolution: "@nestjs/platform-express@npm:11.1.17"
   dependencies:
     cors: 2.8.6
     express: 5.2.1
@@ -3674,7 +3674,7 @@ __metadata:
   peerDependencies:
     "@nestjs/common": ^11.0.0
     "@nestjs/core": ^11.0.0
-  checksum: 900fa87dad876721a6272385aaf4ba836842cbe24bafe943ee2793d2cf940d590a8752581a95f8935c5f565f89583caa8e27596affeba37dabb9f873436a78c2
+  checksum: 22ce5cb5f752c23db07e6cd48c3a94b585477d84fe93582db26ea512c385a430303003013b02d39bde7f943da75da40f16bcef0c431329899e4c46370cfa3e27
   languageName: node
   linkType: hard
 
@@ -3694,8 +3694,8 @@ __metadata:
   linkType: hard
 
 "@nestjs/testing@npm:^11.0.0":
-  version: 11.1.16
-  resolution: "@nestjs/testing@npm:11.1.16"
+  version: 11.1.17
+  resolution: "@nestjs/testing@npm:11.1.17"
   dependencies:
     tslib: 2.8.1
   peerDependencies:
@@ -3708,13 +3708,13 @@ __metadata:
       optional: true
     "@nestjs/platform-express":
       optional: true
-  checksum: fc56066140f7874d8a6669fd1879244d4bdd7040bddfe7e6c279da184394e2e90b3da63bba6f251b12184270ebde41470daae74c93b5832c065ef41df0fae644
+  checksum: 5be4088d553f067469f23c7df8019b1a9d7701fcf85a4085dbbbc8f5fbfacb06c9308a13716f1452040a30b9c361b1ad8e47b931c34baf794481e14f371eb37d
   languageName: node
   linkType: hard
 
-"@nevo-test-drive/source@workspace:.":
+"@nevo/source@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@nevo-test-drive/source@workspace:."
+  resolution: "@nevo/source@workspace:."
   dependencies:
     "@eslint/js": ^9.8.0
     "@nestjs/common": ^11.0.0
@@ -11441,15 +11441,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-type@npm:21.3.0":
-  version: 21.3.0
-  resolution: "file-type@npm:21.3.0"
+"file-type@npm:21.3.2":
+  version: 21.3.2
+  resolution: "file-type@npm:21.3.2"
   dependencies:
     "@tokenizer/inflate": ^0.4.1
     strtok3: ^10.3.4
     token-types: ^6.1.1
     uint8array-extras: ^1.4.0
-  checksum: 52c480c327ff4800095988d1b3a0cf92eac5cae84c8ee6f15feb08b866b56404726e83ef74d4c51fffd749d4b7c64a4e2bb40bcfd8d9e44e6a0664cd694baf18
+  checksum: 175ce8a21cf2129410a6e01134638c9237a079c9abb7200cda46824c2a9ff1bdff0c63ce52c40201bb741d9139c24cbe5573b5d06f3ce0b723e018416d0c86cf
   languageName: node
   linkType: hard
 
@@ -19454,8 +19454,8 @@ __metadata:
   linkType: hard
 
 "terser@npm:^5.31.1":
-  version: 5.46.0
-  resolution: "terser@npm:5.46.0"
+  version: 5.46.1
+  resolution: "terser@npm:5.46.1"
   dependencies:
     "@jridgewell/source-map": ^0.3.3
     acorn: ^8.15.0
@@ -19463,7 +19463,7 @@ __metadata:
     source-map-support: ~0.5.20
   bin:
     terser: bin/terser
-  checksum: 39d28f3723e84e80ddb4576a441adb12a6d365258fb9262e25f8b6d1e4514954e81f711008ee2ad9927f00b860a5bcbd4c1db7a6873d0f712bdcc667fb7b7557
+  checksum: 1d93e7c57c192b029738684df639426e788041eea689080e4c1e54823dc949fbaead64b287d637084df28ef5dc1ddd46fdf28370bfc219f6b53e528f5f49506c
   languageName: node
   linkType: hard
 
@@ -21225,8 +21225,8 @@ __metadata:
   linkType: hard
 
 "zustand@npm:^5.0.11":
-  version: 5.0.11
-  resolution: "zustand@npm:5.0.11"
+  version: 5.0.12
+  resolution: "zustand@npm:5.0.12"
   peerDependencies:
     "@types/react": ">=18.0.0"
     immer: ">=9.0.6"
@@ -21241,6 +21241,6 @@ __metadata:
       optional: true
     use-sync-external-store:
       optional: true
-  checksum: 88f315b5165433106a6935b1fa90cbe9baceba00f40d5797e877eca331b006a15426a7f1f35b692d959c5b7a17a2b84720d1c222d8d189cba424551a1fb80019
+  checksum: bf856f2d86912d46439b6e32004b32b77518af49dc23fdc1998457777d860183e0a677498731b61f3d38717b62283e08dd38d1fc3714385e84ba87ef9f5aa4c6
   languageName: node
   linkType: hard
