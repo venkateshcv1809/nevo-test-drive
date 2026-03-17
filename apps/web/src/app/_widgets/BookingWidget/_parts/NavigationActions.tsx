@@ -2,28 +2,28 @@
 
 import React from 'react';
 import { Button } from '../../../../components/ui/Button';
-import { useBookingStore } from '../../../../stores/bookingStore';
+import { useNevoStore } from '../../../../stores/nevoStore';
 
 export const NavigationActions = () => {
     const {
         currentStep,
-        setStep,
-        selectedDates,
-        selectedVehicle,
-        selectedLocation,
-        selectedTimeSlotWithDate,
-    } = useBookingStore();
+        interestedDates,
+        selectedVehicleType,
+        selectedLocationId,
+        selectedDateTime,
+        setCurrentStep,
+    } = useNevoStore();
 
     const isContinueDisabled = () => {
         if (currentStep === 'date') {
-            return !selectedVehicle || !selectedLocation || selectedDates.length === 0;
+            return !selectedVehicleType || !selectedLocationId || interestedDates.length === 0;
         }
-        return !selectedTimeSlotWithDate;
+        return !selectedDateTime;
     };
 
     const handleContinue = () => {
         if (currentStep === 'date') {
-            setStep('time');
+            setCurrentStep('time');
         } else {
             console.log('Proceeding to checkout...');
         }
@@ -33,7 +33,7 @@ export const NavigationActions = () => {
         <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800 mt-8">
             <div className="min-w-[100px]">
                 {currentStep === 'time' && (
-                    <Button variant="secondary" onClick={() => setStep('date')}>
+                    <Button variant="secondary" onClick={() => setCurrentStep('date')}>
                         Back
                     </Button>
                 )}
@@ -45,7 +45,7 @@ export const NavigationActions = () => {
                 disabled={isContinueDisabled()}
                 className="min-w-[200px]"
             >
-                {currentStep === 'date' ? 'See Available Time' : 'Confirm Selection'}
+                {currentStep === 'date' ? 'Select Time' : 'Confirm Selection'}
             </Button>
         </div>
     );

@@ -1,25 +1,25 @@
 'use client';
 import React, { useMemo } from 'react';
 import { Calendar } from '../../../../components/ui/Calendar';
-import { useBookingStore } from '../../../../stores/bookingStore';
 import { useVehicles } from '../../../../hooks/useVehicles';
+import { useNevoStore } from '../../../../stores/nevoStore';
 
 export const DateSelectionStep = () => {
     const { data: vehicles } = useVehicles();
 
-    const { selectedVehicle, selectedLocation, selectedDates, toggleDateSelection } =
-        useBookingStore();
+    const { interestedDates, selectedVehicleType, selectedLocationId, toggleDateSelection } =
+        useNevoStore();
 
     const availableDays = useMemo(() => {
-        if (selectedVehicle && selectedLocation && vehicles) {
-            const vehicleData = vehicles[selectedVehicle];
-            const locationData = vehicleData?.locations[selectedLocation];
+        if (selectedVehicleType && selectedLocationId && vehicles) {
+            const vehicleData = vehicles[selectedVehicleType];
+            const locationData = vehicleData?.locations[selectedLocationId];
             return locationData?.availableDays || [];
         }
         return [];
-    }, [selectedVehicle, selectedLocation, vehicles]);
+    }, [selectedVehicleType, selectedLocationId, vehicles]);
 
-    const isCalendarEnabled = selectedVehicle && selectedLocation && availableDays.length > 0;
+    const isCalendarEnabled = selectedVehicleType && selectedLocationId && availableDays.length > 0;
 
     return (
         <div className="space-y-4">
@@ -37,7 +37,7 @@ export const DateSelectionStep = () => {
                     className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800"
                     isCalendarEnabled={!!isCalendarEnabled}
                     availableDays={availableDays}
-                    selectedDates={selectedDates}
+                    selectedDates={interestedDates}
                     onDateSelect={toggleDateSelection}
                 />
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo } from 'react';
+import { ConfigService } from '@nevo/config';
 
 interface CalendarProps {
     selectedDates: Date[];
@@ -11,10 +12,12 @@ interface CalendarProps {
     availableDays?: string[];
 }
 
+const config = new ConfigService();
+
 export const Calendar: React.FC<CalendarProps> = ({
     selectedDates,
     onDateSelect,
-    maxSelections = 3,
+    maxSelections = config.maxDateSelections,
     className = '',
     isCalendarEnabled = false,
     availableDays = [],
@@ -36,7 +39,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const windowEnd = new Date(today);
-        windowEnd.setDate(today.getDate() + 13);
+        windowEnd.setDate(today.getDate() + config.bookingDaysAhead - 1);
         const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         return target >= today && target <= windowEnd;
     };

@@ -1,14 +1,19 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useBookingStore } from '../../../../stores/bookingStore';
 import { Dropdown } from '../../../../components/ui/Dropdown';
 import { useVehicles } from '../../../../hooks/useVehicles';
+import { useNevoStore } from '../../../../stores/nevoStore';
 
 export const VehicleSelectors = () => {
     const { data: vehicles, isLoading } = useVehicles();
-
-    const { selectedVehicle, setSelectedVehicle, selectedLocation, setSelectedLocation } =
-        useBookingStore();
+    const {
+        selectedVehicleType,
+        selectedLocationId,
+        setSelectedVehicleType,
+        setSelectedVehicleName,
+        setSelectedLocationId,
+        setSelectedLocation,
+    } = useNevoStore();
 
     const vehicleOptions = useMemo(() => {
         if (!vehicles) return [];
@@ -19,22 +24,22 @@ export const VehicleSelectors = () => {
     }, [vehicles]);
 
     const locationOptions = useMemo(() => {
-        if (!selectedVehicle || !vehicles) return [];
+        if (!selectedVehicleType || !vehicles) return [];
 
-        const vehicleData = vehicles[selectedVehicle];
+        const vehicleData = vehicles[selectedVehicleType];
         if (!vehicleData) return [];
 
         return Object.entries(vehicleData.locations).map(([, loc]) => ({
             value: loc.locationId,
             label: loc.locationName,
         }));
-    }, [selectedVehicle, vehicles]);
+    }, [selectedVehicleType, vehicles]);
 
     return (
         <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Dropdown
                 label="Select Vehicle"
-                value={selectedVehicle || ''}
+                value={selectedVehicleType || ''}
                 options={vehicleOptions}
                 placeholder="Choose your EV"
                 disabled={isLoading}
@@ -43,22 +48,28 @@ export const VehicleSelectors = () => {
                     if (!newData) return;
 
                     const isLocationStillValid =
-                        selectedLocation && !!newData.locations[selectedLocation];
-                    setSelectedVehicle(vehicleType);
-
+                        selectedLocationId && !!newData.locations[selectedLocationId];
+                    setSelectedVehicleType(vehicleType);
+                    setSelectedVehicleName(newData.vehicleName);
                     if (!isLocationStillValid) {
-                        setSelectedLocation('');
+                        setSelectedLocationId(null);
+                        setSelectedLocation(null);
                     }
                 }}
             />
 
             <Dropdown
                 label="Select Location"
-                value={selectedLocation || ''}
+                value={selectedLocationId || ''}
                 options={locationOptions}
                 placeholder="Select showroom"
-                disabled={!selectedVehicle}
-                onChange={setSelectedLocation}
+                disabled={!selectedVehicleType}
+                onChange={(locationId) => {
+                    setSelectedLocationId(locationId);
+                    const location =
+                        vehicles?.[selectedVehicleType as string]?.locations[locationId];
+                    setSelectedLocation(location?.locationName || null);
+                }}
             />
         </div>
     );
