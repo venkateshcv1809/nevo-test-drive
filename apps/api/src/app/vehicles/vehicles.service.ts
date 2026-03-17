@@ -1,20 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { PrismaService } from '@nevo/prisma';
+import { ConfigService } from '@nevo/config';
 import { Logger } from '@nevo/logger';
-import { VehicleResponse } from './vehicles.types';
+import { VehicleResponse } from '@nevo/models';
+import { PrismaService } from '@nevo/prisma';
 
 @Injectable()
 export class VehiclesService {
-    private readonly BOOKING_DURATION_MINS = 45;
-
     constructor(
-        private readonly prisma: PrismaService,
-        private readonly logger: Logger
+        private readonly configService: ConfigService,
+        private readonly logger: Logger,
+        private readonly prisma: PrismaService
     ) {}
 
-    /**
-     * Fetch optimized vehicle/location map
-     */
     async getVehicles(): Promise<VehicleResponse> {
         this.logger.log('Generating optimized vehicle lookup map');
         try {
@@ -45,14 +42,7 @@ export class VehiclesService {
         }
     }
 
-    /**
-     * Fetch multi-date availability for the UI grid
-     */
-    async getMultiDateAvailability(dto: {
-        vehicleType: string;
-        location: string;
-        dates: string[];
-    }) {
+    async getAvailability(dto: { vehicleType: string; location: string; dates: string[] }) {
         const vehicles = await this.prisma.vehicle.findMany({
             where: { type: dto.vehicleType, locationId: dto.location },
         });
@@ -77,23 +67,18 @@ export class VehiclesService {
                 return {
                     date: isoDate,
                     timeSlots,
-                    status: this.calculateStatus(timeSlots),
                 };
             })
         );
     }
 
-    /**
-     * Called by BookingService to ensure the car is still free before saving.
-     * Returns the specific Vehicle object that is free.
-     */
     async validateFinalSelection(
         vehicleType: string,
         locationId: string,
         requestedIso: string,
         tx?: any
     ) {
-        const client = tx || this.prisma; // Use transaction client if passed from BookingService
+        const client = tx || this.prisma;
 
         const vehicles = await client.vehicle.findMany({
             where: { type: vehicleType, locationId: locationId },
@@ -102,10 +87,9 @@ export class VehiclesService {
         const requestedDate = new Date(requestedIso);
         const reservations = await this.getReservationsForDay(vehicles, requestedDate, client);
 
-        // Find the first vehicle that can fit this slot
         const freeVehicle = vehicles.find((v: any) => {
             const end = new Date(
-                requestedDate.getTime() + (this.BOOKING_DURATION_MINS + v.interval) * 60000
+                requestedDate.getTime() + (this.configService.timeSlotDuration + v.interval) * 60000
             );
             return this.checkVehicleFreedom(v, reservations, requestedDate, end);
         });
@@ -149,7 +133,7 @@ export class VehiclesService {
         if (slotTime < new Date()) return false;
         return vehicles.some((v) => {
             const end = new Date(
-                slotTime.getTime() + (this.BOOKING_DURATION_MINS + v.interval) * 60000
+                slotTime.getTime() + (this.configService.timeSlotDuration + v.interval) * 60000
             );
             return this.checkVehicleFreedom(v, reservations, slotTime, end);
         });
@@ -192,13 +176,5 @@ export class VehiclesService {
         const d = new Date(base);
         d.setUTCHours(time.getUTCHours(), time.getUTCMinutes(), 0, 0);
         return d;
-    }
-
-    private calculateStatus(slots: any[]): 'high' | 'limited' | 'booked' {
-        const total = slots.filter((s) => s.available).length;
-
-        if (total === 0) return 'booked';
-        // Ensure these strings match the interface exactly
-        return total < 5 ? 'limited' : 'high';
     }
 }
