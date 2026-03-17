@@ -11,10 +11,9 @@ import {
     UseInterceptors,
     ClassSerializerInterceptor,
 } from '@nestjs/common';
-import { CancellationResponse } from '@nevo/models';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/request.dto';
-import { BookingResponseDto, BookingDetailsDto } from './dto/response.dto';
+import { BookingResponseDto, BookingDetailsDto, CancellationResponseDto } from './dto/response.dto';
 
 @Controller('bookings')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -52,13 +51,7 @@ export class BookingsController {
      */
     @Delete(':id')
     @HttpCode(HttpStatus.OK)
-    async cancelBooking(@Param('id') id: string): Promise<CancellationResponse> {
-        const result = await this.bookingsService.cancelBooking(id);
-
-        if (!result) {
-            throw new NotFoundException(`Booking with ID ${id} not found`);
-        }
-
-        return result;
+    async cancelBooking(@Param('id') id: string): Promise<CancellationResponseDto> {
+        return this.bookingsService.cancelBooking(id);
     }
 }

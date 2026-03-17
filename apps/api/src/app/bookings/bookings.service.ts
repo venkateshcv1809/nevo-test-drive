@@ -6,11 +6,15 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nevo/config';
 import { Logger } from '@nevo/logger';
-import { BookingDetails, BookingResponse, CreateBookingRequest } from '@nevo/models';
+import {
+    BookingDetails,
+    BookingResponse,
+    CancellationResponse,
+    CreateBookingRequest,
+} from '@nevo/models';
 import { PrismaService } from '@nevo/prisma';
 import { BookingStatus } from '@prisma/client';
 import { VehiclesService } from '../vehicles/vehicles.service';
-import { CancellationResponseDto } from './dto/response.dto';
 
 @Injectable()
 export class BookingsService {
@@ -101,7 +105,7 @@ export class BookingsService {
      * Cancel a booking (Soft Delete)
      * This frees up the vehicle for the VehiclesService immediately
      */
-    async cancelBooking(reservationId: string): Promise<CancellationResponseDto> {
+    async cancelBooking(reservationId: string): Promise<CancellationResponse> {
         const booking = await this.prisma.reservation.findUnique({
             where: { reservationId },
         });

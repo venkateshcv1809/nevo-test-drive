@@ -12,6 +12,7 @@ export const NavigationActions = () => {
         selectedLocationId,
         selectedDateTime,
         setCurrentStep,
+        setShowCustomerModal,
     } = useNevoStore();
 
     const isContinueDisabled = () => {
@@ -25,7 +26,9 @@ export const NavigationActions = () => {
         if (currentStep === 'date') {
             setCurrentStep('time');
         } else {
-            console.log('Proceeding to checkout...');
+            if (selectedDateTime) {
+                setShowCustomerModal(true);
+            }
         }
     };
 
