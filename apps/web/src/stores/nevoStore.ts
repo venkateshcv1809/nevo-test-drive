@@ -22,6 +22,7 @@ interface NevoState {
 }
 
 interface NevoActions {
+    resetStore: () => void;
     setCurrentStep: (step: Step) => void;
     setCustomerName: (name: string | null) => void;
     setCustomerEmail: (email: string | null) => void;
@@ -88,5 +89,23 @@ export const useNevoStore = create<NevoState & NevoActions>((set, get) => ({
                 interestedDates: [...currentDates, date],
             });
         }
+    },
+    resetStore: () => {
+        set({
+            currentStep: 'date',
+            customerName: null,
+            customerEmail: null,
+            customerPhone: null,
+            error: null,
+            interestedDates: [],
+            loading: false,
+            selectedVehicleType: null,
+            selectedVehicleName: null,
+            selectedLocationId: null,
+            selectedLocation: null,
+            selectedDateTime: null,
+            selectedTimeSlot: null,
+            showCustomerModal: false,
+        });
     },
 }));
