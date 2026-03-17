@@ -4,8 +4,9 @@ import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal } from '../../components/ui/Modal';
 import { CustomerForm } from '../../components/booking/CustomerForm';
-import { useNevoStore } from '../../stores/nevoStore';
 import { useCreateBooking } from '../../hooks/useBookings';
+import { formatReadableTime } from '../../lib/util';
+import { useNevoStore } from '../../stores/nevoStore';
 
 export const CustomerModal = () => {
     const router = useRouter();
@@ -26,6 +27,7 @@ export const CustomerModal = () => {
         setCustomerPhone,
         // Selection Data for the API payload
         selectedVehicleType,
+        selectedVehicleName,
         selectedLocationId,
         selectedDateTime, // This is the ISO string from the API
     } = useNevoStore();
@@ -101,8 +103,8 @@ export const CustomerModal = () => {
                         Booking Summary:
                     </p>
                     <p className="text-blue-700 dark:text-blue-400">
-                        {selectedVehicleType} •{' '}
-                        {selectedDateTime ? new Date(selectedDateTime).toLocaleString() : ''}
+                        {selectedVehicleName} •{' '}
+                        {selectedDateTime ? formatReadableTime(new Date(selectedDateTime)) : ''}
                     </p>
                 </div>
 

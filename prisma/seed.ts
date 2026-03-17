@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { logger } from '../libs/shared/util/logger/src';
-import { PrismaClient } from '@prisma/client';
+import { BookingStatus, PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
@@ -165,7 +165,7 @@ async function main() {
                         customerName: reservation.customerName,
                         customerEmail: reservation.customerEmail,
                         customerPhone: reservation.customerPhone,
-                        status: 'B',
+                        status: BookingStatus.BOOKED,
                     },
                 })
             )

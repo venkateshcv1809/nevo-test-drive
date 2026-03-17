@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum BookingStatus {
-    BOOKED    @map("B")
-    COMPLETED @map("C")
-    DELETED   @map("D")
+    BOOKED
+    COMPLETED
+    DELETED
 }
 
 // Vehicle model represents available vehicles for reservation
@@ -64,7 +64,7 @@ model Vehicle {
 // - customerName: Customer's full name
 // - customerEmail: Customer's email for notifications
 // - customerPhone: Customer's phone for contact
-// - status: Reservation status (B=Booked, C=Completed, D=Deleted)
+// - status: Reservation status (BOOKED, COMPLETED, DELETED)
 // - createdAt: Record creation timestamp
 // - updatedAt: Last update timestamp
 model Reservation {
@@ -77,7 +77,7 @@ model Reservation {
     customerName    String
     customerEmail   String
     customerPhone   String
-    status          String   @default("B")
+    status          String   @default("BOOKED")
     createdAt       DateTime @default(now())
     updatedAt       DateTime @updatedAt
 

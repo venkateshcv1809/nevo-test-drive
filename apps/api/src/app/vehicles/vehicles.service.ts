@@ -2,7 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nevo/config';
 import { Logger } from '@nevo/logger';
 import { VehicleResponse } from '@nevo/models';
-import { PrismaService } from '@nevo/prisma';
+import { BookingStatus, PrismaService } from '@nevo/prisma';
 
 @Injectable()
 export class VehiclesService {
@@ -119,12 +119,15 @@ export class VehiclesService {
         const vTo = this.combineDateTime(start, vehicle.availableTo);
         if (start < vFrom || end > vTo) return false;
 
-        const isBooked = reservations.some(
-            (res) =>
-                res.vehicleId === vehicle.vehicleId &&
-                start < new Date(res.endDateTime) &&
-                end > new Date(res.startDateTime)
-        );
+        const isBooked = reservations.some((res) => {
+            if (res.vehicleId !== vehicle.vehicleId) return false;
+            const resStart = new Date(res.startDateTime);
+            const resEndWithInterval = new Date(
+                new Date(res.endDateTime).getTime() + vehicle.interval * 60000
+            );
+
+            return start < resEndWithInterval && end > resStart;
+        });
 
         return !isBooked;
     }
@@ -166,7 +169,7 @@ export class VehiclesService {
         return client.reservation.findMany({
             where: {
                 vehicleId: { in: vehicles.map((v) => v.vehicleId) },
-                status: 'B',
+                status: { not: BookingStatus.DELETED },
                 startDateTime: { gte: start, lte: end },
             },
         });

@@ -8,6 +8,7 @@ import { Button } from '../../../components/ui/Button';
 import { QRCode } from '../../../components/ui/QRCode';
 import { useNevoStore } from '../../../stores/nevoStore';
 import { useGetBooking, useCancelBooking } from '../../../hooks/useBookings';
+import { formatReadableDate, formatReadableTime } from '../../../lib/util';
 import html2canvas from 'html2canvas';
 
 export default function BookingConfirmationPage() {
@@ -217,24 +218,11 @@ export default function BookingConfirmationPage() {
                                         <DetailRow label="Vehicle" value={booking.vehicle.name} />
                                         <DetailRow
                                             label="Date"
-                                            value={new Date(booking.date).toLocaleDateString(
-                                                'en-GB',
-                                                {
-                                                    weekday: 'long',
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                }
-                                            )}
+                                            value={formatReadableDate(new Date(booking.date))}
                                         />
                                         <DetailRow
                                             label="Arrival Time"
-                                            value={new Date(booking.timeSlot).toLocaleTimeString(
-                                                'en-GB',
-                                                {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                }
-                                            )}
+                                            value={formatReadableTime(new Date(booking.timeSlot))}
                                         />
                                         <DetailRow
                                             label="Showroom"
