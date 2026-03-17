@@ -8,16 +8,16 @@ import {
     NotFoundException,
     HttpCode,
     HttpStatus,
+    UseInterceptors,
+    ClassSerializerInterceptor,
 } from '@nestjs/common';
+import { CancellationResponse } from '@nevo/models';
 import { BookingsService } from './bookings.service';
-import {
-    BookingDetails,
-    BookingResponse,
-    CancellationResponse,
-    CreateBookingRequest, // Import the updated type
-} from './bookings.types';
+import { CreateBookingDto } from './dto/request.dto';
+import { BookingResponseDto, BookingDetailsDto } from './dto/response.dto';
 
 @Controller('bookings')
+@UseInterceptors(ClassSerializerInterceptor)
 export class BookingsController {
     constructor(private readonly bookingsService: BookingsService) {}
 
@@ -26,10 +26,8 @@ export class BookingsController {
      * Receives the user details and the ISO timestamp for the slot
      */
     @Post()
-    @HttpCode(HttpStatus.CREATED) // Explicitly set 201
-    async createBooking(
-        @Body() createBookingDto: CreateBookingRequest // Capture frontend data here
-    ): Promise<BookingResponse> {
+    @HttpCode(HttpStatus.CREATED)
+    async createBooking(@Body() createBookingDto: CreateBookingDto): Promise<BookingResponseDto> {
         return this.bookingsService.createBooking(createBookingDto);
     }
 
@@ -38,7 +36,7 @@ export class BookingsController {
      * Fetches detailed info about a specific booking
      */
     @Get(':id')
-    async getBooking(@Param('id') id: string): Promise<BookingDetails> {
+    async getBooking(@Param('id') id: string): Promise<BookingDetailsDto> {
         const booking = await this.bookingsService.getBookingDetails(id);
 
         if (!booking) {

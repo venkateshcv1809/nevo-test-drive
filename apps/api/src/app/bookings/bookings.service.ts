@@ -1,61 +1,63 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@nevo/prisma';
-import { Logger } from '@nevo/logger';
-import { VehiclesService } from '../vehicles/vehicles.service';
 import {
-    CreateBookingRequest,
-    BookingResponse,
-    BookingDetails,
-    CancellationResponse,
-} from './bookings.types';
+    Injectable,
+    ConflictException,
+    NotFoundException,
+    BadRequestException,
+} from '@nestjs/common';
+import { ConfigService } from '@nevo/config';
+import { Logger } from '@nevo/logger';
+import { BookingDetails, BookingResponse, CreateBookingRequest } from '@nevo/models';
+import { PrismaService } from '@nevo/prisma';
+import { BookingStatus } from '@prisma/client';
+import { VehiclesService } from '../vehicles/vehicles.service';
+import { CancellationResponseDto } from './dto/response.dto';
 
 @Injectable()
 export class BookingsService {
     constructor(
+        private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
         private readonly vehiclesService: VehiclesService,
         private readonly logger: Logger
     ) {}
 
-    /**
-     * Create a new booking using a Transaction and the VehiclesService Oracle
-     */
     async createBooking(request: CreateBookingRequest): Promise<BookingResponse> {
         try {
             return await this.prisma.$transaction(async (tx) => {
-                // 1. Ask VehiclesService to find a free vehicle for this EXACT UTC moment
-                // We pass 'tx' so the validation happens inside the lock
                 const freeVehicle = await this.vehiclesService.validateFinalSelection(
                     request.vehicleType,
                     request.location,
-                    request.requestedIso, // Use the ISO string from the frontend
+                    request.requestedIso,
                     tx
                 );
 
-                // 2. Generate a unique Business ID
-                const bookingId = `NEVO-${Date.now()}`;
+                const timestampHex = Date.now().toString(16).toUpperCase();
+                const randomSuffix = Math.floor(Math.random() * 0x10000)
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(4, '0');
+                const bookingId = `NEVO-${timestampHex}-${randomSuffix}`;
 
-                // 3. Create the record in the database
                 const newBooking = await tx.reservation.create({
                     data: {
                         reservationId: bookingId,
                         vehicleId: freeVehicle.vehicleId,
                         startDateTime: new Date(request.requestedIso),
-                        // VehiclesService handles the duration/interval logic
                         endDateTime: new Date(
-                            new Date(request.requestedIso).getTime() + 60 * 60000
+                            new Date(request.requestedIso).getTime() +
+                                this.configService.timeSlotDuration * 60000
                         ),
                         customerName: request.customerName,
                         customerEmail: request.customerEmail,
                         customerPhone: request.customerPhone,
-                        status: 'confirmed',
+                        status: BookingStatus.BOOKED,
                     },
                 });
 
                 return {
                     success: true,
                     bookingId: newBooking.reservationId,
-                    status: newBooking.status,
+                    status: newBooking.status as BookingStatus,
                 };
             });
         } catch (error) {
@@ -69,10 +71,10 @@ export class BookingsService {
     /**
      * Get booking details directly from DB
      */
-    async getBookingDetails(id: string): Promise<BookingDetails | null> {
+    async getBookingDetails(reservationId: string): Promise<BookingDetails | null> {
         const booking = await this.prisma.reservation.findUnique({
-            where: { reservationId: id },
-            include: { vehicle: true }, // Joins with vehicle table
+            where: { reservationId },
+            include: { vehicle: true },
         });
 
         if (!booking) throw new NotFoundException('Booking not found');
@@ -86,11 +88,11 @@ export class BookingsService {
                 location: booking.vehicle.location,
             },
             date: booking.startDateTime.toISOString(),
-            timeSlot: booking.startDateTime.toISOString(), // Use ISO for global safety
+            timeSlot: booking.startDateTime.toISOString(),
             customerName: booking.customerName,
             customerEmail: booking.customerEmail,
             customerPhone: booking.customerPhone,
-            status: booking.status,
+            status: booking.status as BookingStatus,
             createdAt: booking.createdAt.toISOString(),
         };
     }
@@ -99,39 +101,29 @@ export class BookingsService {
      * Cancel a booking (Soft Delete)
      * This frees up the vehicle for the VehiclesService immediately
      */
-    async cancelBooking(id: string): Promise<CancellationResponse | null> {
-        try {
-            // Check if it exists first
-            const booking = await this.prisma.reservation.findUnique({
-                where: { reservationId: id },
-            });
+    async cancelBooking(reservationId: string): Promise<CancellationResponseDto> {
+        const booking = await this.prisma.reservation.findUnique({
+            where: { reservationId },
+        });
 
-            if (!booking) return null;
-
-            if (booking.status === 'cancelled') {
-                return {
-                    message: 'Booking already cancelled',
-                    cancelledAt: booking.updatedAt.toISOString(),
-                };
-            }
-
-            // Update status in Database
-            const updatedBooking = await this.prisma.reservation.update({
-                where: { reservationId: id },
-                data: {
-                    status: 'cancelled',
-                    // updatedAt is usually handled by Prisma automatically,
-                    // but we can be explicit if needed.
-                },
-            });
-
-            return {
-                message: 'Booking cancelled successfully',
-                cancelledAt: updatedBooking.updatedAt.toISOString(),
-            };
-        } catch (error) {
-            this.logger.error(`Failed to cancel booking ${id}`);
-            throw error;
+        if (!booking) {
+            throw new NotFoundException(`Booking ${reservationId} not found`);
         }
+
+        if (booking.status === BookingStatus.DELETED) {
+            throw new BadRequestException('This booking is already canceled.');
+        }
+
+        const updated = await this.prisma.reservation.update({
+            where: { reservationId },
+            data: { status: BookingStatus.DELETED },
+        });
+
+        return {
+            success: true,
+            bookingId: updated.reservationId,
+            status: 'DELETED',
+            message: 'Your reservation has been successfully canceled.',
+        };
     }
 }

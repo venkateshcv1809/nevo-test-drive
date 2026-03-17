@@ -7,6 +7,12 @@ datasource db {
     provider = "postgresql"
 }
 
+enum BookingStatus {
+    BOOKED    @map("B")
+    COMPLETED @map("C")
+    DELETED   @map("D")
+}
+
 // Vehicle model represents available vehicles for reservation
 // Contains vehicle details, availability schedule, and location information
 //
