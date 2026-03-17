@@ -1,13 +1,9 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
-
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { ConfigService } from '@nevo/config';
+import { logger } from '@nevo/logger';
 import { AppModule } from './app/app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { ConfigService } from '@nevo/config';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -15,6 +11,17 @@ async function bootstrap() {
 
     const globalPrefix = 'v1/api';
     app.setGlobalPrefix(globalPrefix);
+
+    app.useGlobalPipes(
+        new ValidationPipe({
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            transform: true,
+            transformOptions: {
+                enableImplicitConversion: true,
+            },
+        })
+    );
 
     // Enable CORS using configuration service
     app.enableCors({
@@ -29,12 +36,12 @@ async function bootstrap() {
     const port = configService.port;
     await app.listen(port);
 
-    Logger.log(`🚀 Application is running on: http://localhost:${port}/${globalPrefix}`);
-    Logger.log(`🌍 Environment: ${configService.nodeEnv}`);
-    Logger.log(`🔗 CORS origins: ${configService.corsOrigins.join(', ')}`);
+    logger.info(`🚀 Application is running on: http://localhost:${port}/${globalPrefix}`);
+    logger.info(`🌍 Environment: ${configService.nodeEnv}`);
+    logger.info(`🔗 CORS origins: ${configService.corsOrigins.join(', ')}`);
 
     if (configService.debugMode) {
-        Logger.log('🐛 Debug mode enabled');
+        logger.info('🐛 Debug mode enabled');
     }
 }
 
