@@ -1,22 +1,28 @@
 'use client';
+
 import React, { useState, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Header } from '../../../components/layout/Header';
 import { Container } from '../../../components/layout/Container';
 import { Button } from '../../../components/ui/Button';
 import { QRCode } from '../../../components/ui/QRCode';
-import { useBookingStore } from '../../../stores/bookingStore';
-import { useBooking, useCancelBooking } from '../../../hooks/useBookings';
+import { useNevoStore } from '../../../stores/nevoStore';
+import { useGetBooking, useCancelBooking } from '../../../hooks/useBookings';
+import { formatReadableDate, formatReadableTime } from '../../../lib/util';
 import html2canvas from 'html2canvas';
 
 export default function BookingConfirmationPage() {
     const params = useParams();
-    const { resetBooking } = useBookingStore();
+    const router = useRouter();
+    const { resetStore } = useNevoStore();
     const bookingWidgetRef = useRef<HTMLDivElement>(null);
 
     const bookingId = params.id as string;
-    const { data: booking, isLoading: loading, error } = useBooking(bookingId);
-    const cancelBookingMutation = useCancelBooking();
+
+    // Using the TanStack Query hooks we built
+    const { data: booking, isLoading, error } = useGetBooking(bookingId);
+    const cancelBookingMutation = useCancelBooking(bookingId);
+
     const [downloading, setDownloading] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -26,91 +32,121 @@ export default function BookingConfirmationPage() {
 
         setDownloading(true);
         try {
-            // Simpler approach - just wait for QR code to load
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            // Wait briefly for QR code rendering to stabilize
+            await new Promise((resolve) => setTimeout(resolve, 800));
 
             const canvas = await html2canvas(bookingWidgetRef.current, {
                 scale: 2,
-                logging: false,
                 useCORS: true,
-                allowTaint: true,
-                width: bookingWidgetRef.current.offsetWidth + 40,
-                height: bookingWidgetRef.current.offsetHeight + 40,
-                windowWidth: bookingWidgetRef.current.offsetWidth + 40,
-                windowHeight: bookingWidgetRef.current.offsetHeight + 40,
-                scrollX: -20,
-                scrollY: -20,
+                backgroundColor: null, // Keep transparency if needed
             });
 
             const link = document.createElement('a');
-            link.download = `booking-${booking?.id}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0);
+            link.download = `NEVO-Booking-${bookingId}.png`;
+            link.href = canvas.toDataURL('image/png');
             link.click();
-        } catch (error) {
-            console.error('Error downloading widget as image:', error);
-            // Could add error toast here
+        } catch (err) {
+            console.error('Download failed:', err);
         } finally {
             setDownloading(false);
         }
     };
 
-    const handleCancelBooking = async () => {
-        setShowCancelModal(true);
-    };
-
     const confirmCancelBooking = async () => {
         try {
-            await cancelBookingMutation.mutateAsync(bookingId);
-            // Close modal first
+            await cancelBookingMutation.mutateAsync();
             setShowCancelModal(false);
-            // Show success message
             setShowSuccessMessage(true);
-            // Reset booking and redirect after delay
+
+            // Short delay to show the success toast before resetting and leaving
             setTimeout(() => {
-                resetBooking();
-                window.location.href = '/';
-            }, 2000);
-        } catch (error) {
-            console.error('Error cancelling booking:', error);
-            // Could add error toast here too
+                resetStore();
+                router.push('/');
+            }, 2500);
+        } catch (err) {
+            console.error('Cancellation failed:', err);
         }
     };
 
     const handleBookAnother = () => {
-        // Reset booking store and navigate back to booking
-        resetBooking();
-        window.location.href = '/';
+        resetStore();
+        router.push('/');
     };
 
-    if (loading) {
+    // 1. Loading State
+    if (isLoading) {
         return (
-            <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
+            <div className="min-h-screen bg-white dark:bg-gray-950">
                 <Header />
-                <main className="py-8">
-                    <Container size="md">
-                        <div className="flex items-center justify-center min-h-[60vh]">
-                            <div className="text-center">
-                                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                                <p className="text-gray-400 dark:text-gray-500">
-                                    Loading booking details...
-                                </p>
-                            </div>
-                        </div>
-                    </Container>
-                </main>
+                <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                    <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                    <p className="text-gray-500">Retrieving your reservation...</p>
+                </div>
             </div>
         );
     }
 
-    // Check if booking is cancelled
-    if (booking && booking.status === 'cancelled') {
+    // 2. Error or Not Found State
+    if (!booking || error) {
         return (
-            <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
+            <div className="min-h-screen bg-white dark:bg-gray-950">
                 <Header />
-                <main className="py-8">
-                    <Container size="md">
-                        <div className="text-center space-y-6">
-                            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto">
+                <Container size="md" className="py-20 text-center">
+                    <h1 className="text-2xl font-bold text-red-500 mb-4">Booking Not Found</h1>
+                    <p className="text-gray-500 mb-8">
+                        We couldn't find a reservation with ID: {bookingId}
+                    </p>
+                    <Button variant="primary" onClick={handleBookAnother}>
+                        Return to Home
+                    </Button>
+                </Container>
+            </div>
+        );
+    }
+
+    // 3. Cancelled State (Status 'DELETED' from our Backend)
+    if (booking.status === 'DELETED') {
+        return (
+            <div className="min-h-screen bg-white dark:bg-gray-950">
+                <Header />
+                <Container size="md" className="py-20 text-center space-y-6">
+                    <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto text-gray-400">
+                        <svg
+                            className="w-10 h-10"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-400">Booking Cancelled</h1>
+                    <p className="text-gray-500">
+                        This test drive reservation is no longer active.
+                    </p>
+                    <Button variant="primary" onClick={handleBookAnother}>
+                        Schedule New Test Drive
+                    </Button>
+                </Container>
+            </div>
+        );
+    }
+
+    // 4. Main Confirmed State
+    return (
+        <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white pb-20">
+            <Header />
+            <main className="py-8">
+                <Container size="md">
+                    <div className="space-y-8">
+                        {/* Status Header */}
+                        <div className="text-center space-y-3">
+                            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-500/20">
                                 <svg
                                     className="w-8 h-8 text-white"
                                     fill="none"
@@ -120,122 +156,33 @@ export default function BookingConfirmationPage() {
                                     <path
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
+                                        strokeWidth={3}
+                                        d="M5 13l4 4L19 7"
                                     />
                                 </svg>
                             </div>
-                            <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
-                                Booking Cancelled
-                            </h1>
-                            <p className="text-gray-600 dark:text-gray-300">
-                                This booking has been cancelled and is no longer active.
-                            </p>
-                            <div className="space-y-2">
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Booking ID:{' '}
-                                    <span className="font-mono font-semibold">{booking.id}</span>
-                                </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Cancelled on:{' '}
-                                    {booking.cancelledAt
-                                        ? booking.cancelledAt.toLocaleDateString()
-                                        : 'Unknown'}
-                                </p>
-                            </div>
-                            <Button
-                                variant="primary"
-                                onClick={handleBookAnother}
-                                className="inline-flex items-center"
-                            >
-                                <svg
-                                    className="w-4 h-4 mr-2 flex-shrink-0"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a2 2 0 002 2h10a2 2 0 002-2v-10M9 12l2 2m0 0l2-2m-2 2h6"
-                                    />
-                                </svg>
-                                Book Another Test Drive
-                            </Button>
-                        </div>
-                    </Container>
-                </main>
-            </div>
-        );
-    }
-
-    if (!booking || error) {
-        return (
-            <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
-                <Header />
-                <main className="py-8">
-                    <Container size="md">
-                        <div className="text-center">
-                            <h1 className="text-2xl font-bold text-red-400 mb-4">
-                                {error ? 'Error Loading Booking' : 'Booking Not Found'}
-                            </h1>
-                            <p className="text-gray-400 dark:text-gray-500 mb-6">
-                                {error?.message || "The booking you're looking for doesn't exist."}
-                            </p>
-                            <Button variant="primary" onClick={handleBookAnother}>
-                                Return to Booking
-                            </Button>
-                        </div>
-                    </Container>
-                </main>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
-            <Header />
-            <main className="py-8">
-                <Container size="md">
-                    <div className="space-y-8">
-                        {/* Success Header */}
-                        <div className="text-center space-y-4">
-                            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-                                <svg
-                                    className="w-8 h-8 text-black"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
-                            </div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-green-500 to-cyan-400 bg-clip-text text-transparent">
+                            <h1 className="text-4xl font-extrabold tracking-tight">
                                 Booking Confirmed!
                             </h1>
-                            <p className="text-gray-400 dark:text-gray-500">
-                                Your EV test drive has been successfully scheduled
+                            <p className="text-gray-500 dark:text-gray-400">
+                                See you at the showroom soon.
                             </p>
                         </div>
 
-                        {/* Combined Booking Details & QR Code Widget */}
-                        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 relative">
-                            {/* Download Button */}
+                        {/* Ticket Widget Container */}
+                        <div className="relative group">
+                            {/* Download Icon Overlay */}
                             <button
                                 onClick={downloadWidgetAsImage}
                                 disabled={downloading}
-                                className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Download as image"
+                                className="absolute -top-3 -right-3 z-10 p-3 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-full shadow-xl hover:scale-110 transition-transform disabled:opacity-50"
+                                title="Download Ticket"
                             >
                                 {downloading ? (
-                                    <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                     <svg
-                                        className="w-4 h-4 mr-2 flex-shrink-0"
+                                        className="w-5 h-5 text-blue-500"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -250,252 +197,130 @@ export default function BookingConfirmationPage() {
                                 )}
                             </button>
 
-                            <div ref={bookingWidgetRef} className="space-y-6 p-8">
-                                {/* Real QR Code at Top */}
-                                <div className="text-center">
-                                    <div className="inline-block p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                                        <QRCode data={booking.id} size={120} />
+                            {/* The Visual Ticket */}
+                            <div
+                                ref={bookingWidgetRef}
+                                className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl"
+                            >
+                                <div className="p-8 space-y-8">
+                                    {/* QR Section */}
+                                    <div className="flex flex-col items-center justify-center space-y-4 pt-4">
+                                        <div className="p-4 bg-white rounded-2xl shadow-inner border border-gray-100">
+                                            <QRCode data={booking.id} size={140} />
+                                        </div>
+                                        <span className="text-xs font-mono font-bold tracking-widest text-gray-400 uppercase">
+                                            Ref: {booking.id}
+                                        </span>
+                                    </div>
+
+                                    {/* Info Grid */}
+                                    <div className="grid grid-cols-1 gap-y-4 border-t border-dashed border-gray-200 dark:border-gray-700 pt-8">
+                                        <DetailRow label="Vehicle" value={booking.vehicle.name} />
+                                        <DetailRow
+                                            label="Date"
+                                            value={formatReadableDate(new Date(booking.date))}
+                                        />
+                                        <DetailRow
+                                            label="Arrival Time"
+                                            value={formatReadableTime(new Date(booking.timeSlot))}
+                                        />
+                                        <DetailRow
+                                            label="Showroom"
+                                            value={`${booking.vehicle.location} Branch`}
+                                        />
+                                        <DetailRow label="Guest" value={booking.customerName} />
                                     </div>
                                 </div>
 
-                                {/* Booking Details */}
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                                            Booking ID
-                                        </span>
-                                        <span className="text-gray-900 dark:text-white font-mono text-sm font-semibold">
-                                            {booking.id}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                                            Vehicle
-                                        </span>
-                                        <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                                            {booking.vehicle.name}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                                            Date
-                                        </span>
-                                        <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                                            {booking.date.toLocaleDateString('en-US', {
-                                                weekday: 'short',
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric',
-                                            })}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                                            Time
-                                        </span>
-                                        <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                                            {booking.startTime} - {booking.endTime}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                                            Location
-                                        </span>
-                                        <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                                            {booking.location} Showroom
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center py-3">
-                                        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                                            Customer
-                                        </span>
-                                        <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                                            {booking.customerInfo.name}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Footer */}
-                                <div className="text-center pt-6 border-t border-gray-200 dark:border-gray-700">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                        {' '}
-                                        111-1111-1111 | support@nevo-testdrive.com
+                                {/* Aesthetic Ticket Bottom */}
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 text-center border-t border-gray-100 dark:border-gray-800">
+                                    <p className="text-xs text-gray-400 font-medium">
+                                        Please present this QR code upon arrival.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Preparation Checklist */}
-                        <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                What to Bring
-                            </h3>
-                            <ul className="space-y-2 text-gray-600 dark:text-gray-300">
-                                <li className="flex items-start">
-                                    <svg
-                                        className="w-5 h-5 text-primary mr-2 mt-0.5 flex-shrink-0"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    <span>Valid driver's license</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <svg
-                                        className="w-5 h-5 text-primary mr-2 mt-0.5 flex-shrink-0"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    <span>Credit card for security deposit</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <svg
-                                        className="w-5 h-5 text-primary mr-2 mt-0.5 flex-shrink-0"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    <span>Comfortable driving shoes</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <svg
-                                        className="w-5 h-5 text-primary mr-2 mt-0.5 flex-shrink-0"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    <span>Arrive 10 minutes early</span>
-                                </li>
-                            </ul>
+                        {/* Prep Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-6 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                                <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-2">
+                                    Arrival Info
+                                </h4>
+                                <p className="text-sm text-blue-800/70 dark:text-blue-400/70">
+                                    Arrive 10 mins early with a valid Driver's License.
+                                </p>
+                            </div>
+                            <div className="p-6 bg-purple-50 dark:bg-purple-900/10 rounded-2xl border border-purple-100 dark:border-purple-900/30">
+                                <h4 className="font-bold text-purple-900 dark:text-purple-300 mb-2">
+                                    Support
+                                </h4>
+                                <p className="text-sm text-purple-800/70 dark:text-purple-400/70">
+                                    Need to reschedule? Call +353 (0) 1 111 2222.
+                                </p>
+                            </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4">
                             <Button
                                 variant="secondary"
-                                onClick={handleCancelBooking}
-                                className="flex-1 inline-flex items-center justify-center"
+                                onClick={() => setShowCancelModal(true)}
+                                className="flex-1 text-red-500 hover:text-red-600"
                                 disabled={cancelBookingMutation.isPending}
                             >
-                                <svg
-                                    className="w-4 h-4 mr-2 flex-shrink-0"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                                {cancelBookingMutation.isPending
-                                    ? 'Cancelling...'
-                                    : 'Cancel Booking'}
+                                Cancel Reservation
                             </Button>
                             <Button
                                 variant="primary"
                                 onClick={handleBookAnother}
-                                className="flex-1 inline-flex items-center justify-center"
+                                className="flex-1"
                             >
-                                <svg
-                                    className="w-4 h-4 mr-2 flex-shrink-0"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a2 2 0 002 2h10a2 2 0 002-2v-10M9 12l2 2m0 0l2-2m-2 2h6"
-                                    />
-                                </svg>
-                                Book Another
+                                Book Another Drive
                             </Button>
-                        </div>
-
-                        {/* Contact Information */}
-                        <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
-                            <p>Need help? Contact us at:</p>
-                            <p> 111-1111-1111</p>
-                            <p> support@nevo-testdrive.com</p>
                         </div>
                     </div>
                 </Container>
             </main>
 
-            {/* Cancel Booking Modal */}
+            {/* Cancel Modal Overlay */}
             {showCancelModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4">
-                        <div className="text-center space-y-4">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto">
-                                <svg
-                                    className="w-6 h-6 text-red-600 dark:text-red-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                Cancel Booking
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-300">
-                                Are you sure you want to cancel this booking? This action cannot be
-                                undone.
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-6">
+                        <div className="text-red-500 mx-auto w-12 h-12">
+                            <svg
+                                className="w-full h-full"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold">Cancel Booking?</h3>
+                            <p className="text-gray-500 text-sm mt-2">
+                                This will release the time slot and cannot be undone.
                             </p>
                         </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <Button
-                                variant="secondary"
-                                onClick={() => setShowCancelModal(false)}
-                                className="flex-1"
-                            >
-                                Keep Booking
-                            </Button>
+                        <div className="flex flex-col gap-3">
                             <Button
                                 variant="primary"
                                 onClick={confirmCancelBooking}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                                 disabled={cancelBookingMutation.isPending}
+                                className="bg-red-500 hover:bg-red-600 border-none"
                             >
-                                {cancelBookingMutation.isPending ? 'Cancelling...' : 'Yes, Cancel'}
+                                {cancelBookingMutation.isPending
+                                    ? 'Processing...'
+                                    : 'Yes, Cancel Booking'}
+                            </Button>
+                            <Button variant="secondary" onClick={() => setShowCancelModal(false)}>
+                                Nevermind, Keep it
                             </Button>
                         </div>
                     </div>
@@ -504,17 +329,20 @@ export default function BookingConfirmationPage() {
 
             {/* Success Toast */}
             {showSuccessMessage && (
-                <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                        />
-                    </svg>
-                    <span className="font-medium">Booking cancelled successfully</span>
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl z-[110] animate-bounce">
+                    Reservation successfully cancelled.
                 </div>
             )}
+        </div>
+    );
+}
+
+// Helper component for ticket rows
+function DetailRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex justify-between items-center group">
+            <span className="text-gray-400 text-sm font-medium">{label}</span>
+            <span className="text-gray-900 dark:text-white font-bold">{value}</span>
         </div>
     );
 }

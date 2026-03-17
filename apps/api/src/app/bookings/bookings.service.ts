@@ -1,166 +1,133 @@
-import { Injectable } from '@nestjs/common';
-import { mockVehicles } from '../vehicles/vehicles.mock';
-import { mockBookings } from './bookings.mock';
 import {
-    Booking,
-    CreateBookingRequest,
-    BookingResponse,
+    Injectable,
+    ConflictException,
+    NotFoundException,
+    BadRequestException,
+} from '@nestjs/common';
+import { ConfigService } from '@nevo/config';
+import { Logger } from '@nevo/logger';
+import {
     BookingDetails,
+    BookingResponse,
     CancellationResponse,
-} from './bookings.types';
+    CreateBookingRequest,
+} from '@nevo/models';
+import { PrismaService } from '@nevo/prisma';
+import { BookingStatus } from '@prisma/client';
 import { VehiclesService } from '../vehicles/vehicles.service';
 
 @Injectable()
 export class BookingsService {
-    constructor(private vehiclesService: VehiclesService) {}
-    /**
-     * Create a new booking
-     */
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly prisma: PrismaService,
+        private readonly vehiclesService: VehiclesService,
+        private readonly logger: Logger
+    ) {}
+
     async createBooking(request: CreateBookingRequest): Promise<BookingResponse> {
-        // Check if slot is available using vehicles service
-        const availabilityResponse = await this.vehiclesService.getDateAvailability({
-            vehicleType: request.vehicleType,
-            location: request.location,
-            date: request.date,
-        });
+        try {
+            return await this.prisma.$transaction(async (tx) => {
+                const freeVehicle = await this.vehiclesService.validateFinalSelection(
+                    request.vehicleType,
+                    request.location,
+                    request.requestedIso,
+                    tx
+                );
 
-        // Find the specific time slot in availability
-        const timeSlotAvailability = availabilityResponse.timeSlots.find(
-            (slot) => slot.time === request.timeSlot && slot.available
-        );
+                const timestampHex = Date.now().toString(16).toUpperCase();
+                const randomSuffix = Math.floor(Math.random() * 0x10000)
+                    .toString(16)
+                    .toUpperCase()
+                    .padStart(4, '0');
+                const bookingId = `NEVO-${timestampHex}-${randomSuffix}`;
 
-        if (!timeSlotAvailability) {
-            return {
-                success: false,
-                message: 'Slot not available',
-            };
+                const newBooking = await tx.reservation.create({
+                    data: {
+                        reservationId: bookingId,
+                        vehicleId: freeVehicle.vehicleId,
+                        startDateTime: new Date(request.requestedIso),
+                        endDateTime: new Date(
+                            new Date(request.requestedIso).getTime() +
+                                this.configService.timeSlotDuration * 60000
+                        ),
+                        customerName: request.customerName,
+                        customerEmail: request.customerEmail,
+                        customerPhone: request.customerPhone,
+                        status: BookingStatus.BOOKED,
+                    },
+                });
+
+                return {
+                    success: true,
+                    bookingId: newBooking.reservationId,
+                    status: newBooking.status as BookingStatus,
+                };
+            });
+        } catch (error) {
+            if (error instanceof ConflictException) {
+                return { success: false, message: error.message };
+            }
+            throw error;
         }
-
-        // Find any available vehicle of this type in this location
-        const availableVehicle = mockVehicles.find(
-            (v) => v.type === request.vehicleType && v.location === request.location
-        );
-
-        if (!availableVehicle) {
-            return {
-                success: false,
-                message: 'No vehicles available for this type and location',
-            };
-        }
-
-        // Check if slot is already taken for ANY vehicle of this type/location
-        const existingBooking = mockBookings.find(
-            (booking) =>
-                booking.date === request.date &&
-                booking.timeSlot === request.timeSlot &&
-                booking.status === 'confirmed'
-        );
-
-        if (existingBooking) {
-            return {
-                success: false,
-                message: 'Slot not available',
-            };
-        }
-
-        // Create new booking with first available vehicle
-        const newBooking: Booking = {
-            id: `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            vehicleId: availableVehicle.id,
-            date: request.date,
-            timeSlot: request.timeSlot,
-            customerName: request.customerName,
-            customerEmail: request.customerEmail,
-            customerPhone: request.customerPhone,
-            status: 'confirmed',
-            createdAt: new Date().toISOString(),
-        };
-
-        // Add to mock data (in real app, this would be database insert)
-        mockBookings.push(newBooking);
-
-        return {
-            success: true,
-            bookingId: newBooking.id,
-            status: newBooking.status,
-        };
     }
 
     /**
-     * Get booking details with vehicle information
+     * Get booking details directly from DB
      */
-    async getBookingDetails(id: string): Promise<BookingDetails | null> {
-        const booking = mockBookings.find((b) => b.id === id);
+    async getBookingDetails(reservationId: string): Promise<BookingDetails | null> {
+        const booking = await this.prisma.reservation.findUnique({
+            where: { reservationId },
+            include: { vehicle: true },
+        });
 
-        if (!booking) {
-            return null;
-        }
-
-        // Find vehicle details
-        const vehicle = mockVehicles.find((v) => v.id === booking.vehicleId);
-
-        if (!vehicle) {
-            return null;
-        }
+        if (!booking) throw new NotFoundException('Booking not found');
 
         return {
-            id: booking.id,
+            id: booking.reservationId,
             vehicle: {
-                id: vehicle.id,
-                type: vehicle.type,
-                name: vehicle.name,
-                location: vehicle.location,
+                id: booking.vehicle.vehicleId,
+                type: booking.vehicle.type,
+                name: booking.vehicle.name,
+                location: booking.vehicle.location,
             },
-            date: booking.date,
-            timeSlot: booking.timeSlot,
+            date: booking.startDateTime.toISOString(),
+            timeSlot: booking.startDateTime.toISOString(),
             customerName: booking.customerName,
             customerEmail: booking.customerEmail,
             customerPhone: booking.customerPhone,
-            status: booking.status,
-            createdAt: booking.createdAt,
-            cancelledAt: booking.cancelledAt,
+            status: booking.status as BookingStatus,
+            createdAt: booking.createdAt.toISOString(),
         };
     }
 
     /**
-     * Cancel a booking (soft delete)
+     * Cancel a booking (Soft Delete)
+     * This frees up the vehicle for the VehiclesService immediately
      */
-    async cancelBooking(id: string): Promise<CancellationResponse | null> {
-        const booking = mockBookings.find((b) => b.id === id);
+    async cancelBooking(reservationId: string): Promise<CancellationResponse> {
+        const booking = await this.prisma.reservation.findUnique({
+            where: { reservationId },
+        });
 
         if (!booking) {
-            return null;
+            throw new NotFoundException(`Booking ${reservationId} not found`);
         }
 
-        if (booking.status === 'cancelled') {
-            return {
-                message: 'Booking already cancelled',
-                cancelledAt: booking.cancelledAt || new Date().toISOString(),
-            };
+        if (booking.status === BookingStatus.DELETED) {
+            throw new BadRequestException('This booking is already canceled.');
         }
 
-        // Soft delete - update status
-        booking.status = 'cancelled';
-        booking.cancelledAt = new Date().toISOString();
+        const updated = await this.prisma.reservation.update({
+            where: { reservationId },
+            data: { status: BookingStatus.DELETED },
+        });
 
         return {
-            message: 'Booking cancelled successfully',
-            cancelledAt: booking.cancelledAt,
+            success: true,
+            bookingId: updated.reservationId,
+            status: 'DELETED',
+            message: 'Your reservation has been successfully canceled.',
         };
-    }
-
-    /**
-     * Check if a slot is available
-     */
-    private isSlotAvailable(vehicleId: string, date: string, timeSlot: string): boolean {
-        const existingBooking = mockBookings.find(
-            (booking) =>
-                booking.vehicleId === vehicleId &&
-                booking.date === date &&
-                booking.timeSlot === timeSlot &&
-                booking.status === 'confirmed'
-        );
-
-        return !existingBooking;
     }
 }

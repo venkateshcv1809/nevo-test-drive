@@ -18,7 +18,8 @@ yarn = "3.8.7"      # Package manager (faster than npm, supports monorepos)
 # ============================================
 # Available to all tasks and automatically loaded
 [env]
-NODE_ENV = "development"           # Default environment mode
+_.file = ".env"
+_.path = "."
 NX_PACKAGE_MANAGER = "yarn"        # Tell Nx to use Yarn
 
 # ============================================
@@ -89,7 +90,7 @@ run = "nx serve api"
 
 [tasks.web]
 description = "Start web application only"
-run = "nx serve web"
+run = "nx serve web --port=${WEB_PORT:-3000}"
 
 [tasks.build]
 description = "Build all applications"

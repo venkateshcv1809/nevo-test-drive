@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nevo/config';
+import { LoggerModule } from '@nevo/logger';
+import { PrismaModule } from '@nevo/prisma';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { VehiclesController } from './vehicles/vehicles.controller';
-import { VehiclesService } from './vehicles/vehicles.service';
-import { BookingsController } from './bookings/bookings.controller';
-import { BookingsService } from './bookings/bookings.service';
-import { ConfigService } from '../config/config.service';
+import { BookingsModule } from './bookings/bookings.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
-    providers: [AppService, VehiclesService, BookingsService, ConfigService],
-    controllers: [AppController, VehiclesController, BookingsController],
+    imports: [PrismaModule, LoggerModule, VehiclesModule, BookingsModule],
+    providers: [AppService, ConfigService],
+    controllers: [AppController],
 })
 export class AppModule {}

@@ -1,26 +1,27 @@
-import { Controller, Get, Param, Query, ParseArrayPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { DateAvailabilityRequestDto } from './dto/request.dto';
+import { DateAvailabilityResponseDto, VehicleGroupDto } from './dto/response.dto';
 import { VehiclesService } from './vehicles.service';
-import { DateAvailabilityResponse, GroupedVehicle } from './vehicles.types';
 
 @Controller('vehicles')
 export class VehiclesController {
     constructor(private readonly vehiclesService: VehiclesService) {}
 
     @Get()
-    async getVehicles(): Promise<GroupedVehicle[]> {
+    async getVehicles(): Promise<Record<string, VehicleGroupDto>> {
         return this.vehiclesService.getVehicles();
     }
 
     @Get(':type/location/:location/availability')
-    async getTypeLocationMultiAvailability(
+    async getAvailability(
         @Param('type') type: string,
         @Param('location') location: string,
-        @Query('dates', ParseArrayPipe) dates: string[]
-    ): Promise<DateAvailabilityResponse[]> {
-        return this.vehiclesService.getMultiDateAvailability({
+        @Query() query: DateAvailabilityRequestDto
+    ): Promise<DateAvailabilityResponseDto[]> {
+        return this.vehiclesService.getAvailability({
             vehicleType: type,
             location,
-            dates,
+            dates: query.dates,
         });
     }
 }
