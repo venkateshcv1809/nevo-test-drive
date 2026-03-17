@@ -30,5 +30,7 @@ export const useVehicleAvailability = (
             return data;
         },
         enabled: !!type && !!location && dates.length > 0 && dates.length <= 3,
+        staleTime: 0,
+        refetchOnMount: 'always',
     });
 };
