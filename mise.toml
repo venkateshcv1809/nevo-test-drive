@@ -82,7 +82,7 @@ run = "yarn nx reset && echo '🔄 Full project reset complete!'"
 
 [tasks.dev]
 description = "Start both API and web applications in development"
-run = "nx run-many -t serve -p api web"
+run = "nx run-many -t serve -p api web --port=${WEB_PORT:-3000}"
 
 [tasks.api]
 description = "Start API server only"
